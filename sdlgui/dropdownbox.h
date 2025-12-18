@@ -65,10 +65,10 @@ public:
     const std::vector<std::string> &itemsShort() const { return mItemsShort; }
 
     /// Handles mouse scrolling events for this dropdownbox.
-    virtual bool scrollEvent(const Vector2i &p, const Vector2f &rel) override;
+    virtual bool scrollEvent(const Vector2f &p, const Vector2f &rel) override;
 
     virtual void draw(SDL_Renderer* renderer) override;
-    virtual bool mouseButtonEvent(const Vector2i &p, int button, bool down, int modifiers) override; 
+    virtual bool mouseButtonEvent(const Vector2f &p, int button, bool down, int modifiers) override; 
 
 protected:
     /// The items associated with this dropdownbox.

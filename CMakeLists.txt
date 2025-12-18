@@ -1,10 +1,12 @@
-cmake_minimum_required (VERSION 2.8.3)
+cmake_minimum_required (VERSION 3.18)
 
 project("sdlgui")
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 # Required libraries for linking against nngui (all targets)
 set(NNGUI_EXTRA_LIBS "")
@@ -62,33 +64,13 @@ endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
-find_package(SDL2 REQUIRED)
-find_package(SDL2IMAGE REQUIRED)
-find_package(SDL2TTF REQUIRED)
-
-include_directories(${SDL2_INCLUDE_DIR})
-include_directories(${SDL2TTF_INCLUDE_DIR})
-include_directories(${SDL2_IMAGE_INCLUDE_DIR})
-
-# Required core libraries on various platforms
-if (WIN32) 
-  list(APPEND NNGUI_EXTRA_LIBS opengl32)
-elseif (APPLE)
-  find_library(cocoa_library Cocoa)
-  find_library(opengl_library OpenGL)
-  find_library(corevideo_library CoreVideo)
-  find_library(iokit_library IOKit)
-  list(APPEND NNGUI_EXTRA_LIBS ${cocoa_library} ${opengl_library} ${corevideo_library} ${iokit_library})
-  list(APPEND NNGUI_EXTRA_SOURCE darwin.mm)
-elseif(CMAKE_SYSTEM MATCHES "Linux")
-  list(APPEND NNGUI_EXTRA_LIBS GL Xxf86vm Xrandr Xinerama Xcursor Xi X11 pthread dl rt)
-endif()
+find_package(SDL3 REQUIRED)
+find_package(SDL3_image REQUIRED)
+find_package(SDL3_ttf REQUIRED)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${CMAKE_CURRENT_SOURCE_DIR}/include
                     ${CMAKE_CURRENT_BINARY_DIR})
-
-message(${NNGUI_EXTRA_LIBS})
 
 set(NNGUI_BASIC_SOURCE "")
 list(APPEND NNGUI_BASIC_SOURCE
@@ -121,7 +103,7 @@ list(APPEND NNGUI_BASIC_SOURCE
      sdlgui/window.h
      sdlgui/nanovg.h
      sdlgui/nanovg_rt.h
-     
+
      sdlgui/button.cpp
      sdlgui/checkbox.cpp
      sdlgui/colorpicker.cpp
@@ -153,18 +135,24 @@ list(APPEND NNGUI_BASIC_SOURCE
      sdlgui/window.cpp
      sdlgui/nanovg.c
 )
-     
+
+add_library(${PROJECT_NAME}
+     ${NNGUI_EXTRA_SOURCE} ${NNGUI_BASIC_SOURCE}
+)
+target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3-shared SDL3_image::SDL3_image-shared SDL3_ttf::SDL3_ttf-shared)
+install(TARGETS ${PROJECT_NAME})
+
 option(NANOGUI_BUILD_EXAMPLE "Build example application" ON)
 if (NANOGUI_BUILD_EXAMPLE)
   # Build example application if desired
-  add_executable(example1 ${NNGUI_EXTRA_SOURCE} ${NNGUI_BASIC_SOURCE} example1.cpp )
+  add_executable(example1 example1.cpp )
   set_target_properties(
       example1 PROPERTIES
       VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/build/debug")
-  target_link_libraries(example1 ${NNGUI_EXTRA_LIBS} ${SDL2_LIBRARY} ${SDL2IMAGE_LIBRARY} ${SDL2TTF_LIBRARY})
+		target_link_libraries(example1 ${PROJECT_NAME})
 
   # Copy icons for example application
-  if (WIN32) 
+  if (WIN32)
     file(COPY resources/icons DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/debug)
   else()
     file(COPY resources/icons DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

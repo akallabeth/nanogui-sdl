@@ -11,11 +11,8 @@
 #include <sdlgui/button.h>
 #include <sdlgui/theme.h>
 
-#if defined(_WIN32)
-#include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
+#include <SDL3/SDL.h>
+
 #include <array>
 #include <thread>
 
@@ -42,7 +39,7 @@ struct Button::AsyncTexture
       std::lock_guard<std::mutex> guard(button->theme()->loadMutex);
 
       NVGcontext *ctx = nullptr;
-      int realw, realh;
+      float realw, realh;
       button->renderBodyTexture(ctx, realw, realh);
       self->tex.rrect = { 0, 0, realw, realh };
       self->ctx = ctx;
@@ -83,10 +80,10 @@ Button::Button(Widget *parent, const std::string &caption, int icon)
   _iconTex.dirty = true;
 }
 
-Vector2i Button::preferredSize(SDL_Renderer *ctx) const
+Vector2f Button::preferredSize(SDL_Renderer *ctx) const
 {
     int fontSize = mFontSize == -1 ? mTheme->mButtonFontSize : mFontSize;
-    float tw = const_cast<Button*>(this)->mTheme->getTextWidth("sans-bold", fontSize, mCaption.c_str());
+    float tw = const_cast<Button*>(this)->mTheme->getTextWidth("sans-bold", fontSize, mCaption);
     float iw = 0.0f, ih = fontSize;
 
     if (mIcon) 
@@ -98,16 +95,16 @@ Vector2i Button::preferredSize(SDL_Renderer *ctx) const
         } 
         else 
         {
-            int w, h;
+            float w, h;
             ih *= 0.9f;
-            SDL_QueryTexture((SDL_Texture*)mIcon, nullptr, nullptr, &w, &h);
+            SDL_GetTextureSize((SDL_Texture*)mIcon, &w, &h);
             iw = w * ih / h;
         }
     }
-    return Vector2i((int)(tw + iw) + 20, fontSize + 10);
+    return Vector2f((tw + iw) + 20, fontSize + 10);
 }
 
-bool Button::mouseButtonEvent(const Vector2i &p, int button, bool down, int modifiers)
+bool Button::mouseButtonEvent(const Vector2f &p, int button, bool down, int modifiers)
 {
     Widget::mouseButtonEvent(p, button, down, modifiers);
     /* Temporarily increase the reference count of the button in case the
@@ -228,29 +225,29 @@ Color Button::bodyColor()
 
 void Button::drawBodyTemp(SDL_Renderer* renderer)
 {
-  Vector2i ap = absolutePosition();
+  Vector2f ap = absolutePosition();
   SDL_Color bodyclr = bodyColor().toSdlColor();
 
-  SDL_Rect bodyRect{ ap.x + 1, ap.y + 1, width() - 2, height() - 2 };
+  SDL_FRect bodyRect{ ap.x + 1, ap.y + 1, width() - 2, height() - 2 };
   SDL_SetRenderDrawColor(renderer, bodyclr.r, bodyclr.g, bodyclr.b, bodyclr.a);
   SDL_RenderFillRect(renderer, &bodyRect);
 
-  SDL_Rect btnRect{ ap.x - 1, ap.y - 1, width() + 2, height() + 1 };
+  SDL_FRect btnRect{ ap.x - 1, ap.y - 1, width() + 2, height() + 1 };
   SDL_Color bl = (mPushed ? mTheme->mBorderDark : mTheme->mBorderLight).toSdlColor();
   SDL_SetRenderDrawColor(renderer, bl.r, bl.g, bl.b, bl.a);
-  SDL_Rect blr{ ap.x, ap.y + (mPushed ? 1 : 2), width() - 1, height() - 1 - (mPushed ? 0 : 1) };
-  SDL_RenderDrawLine(renderer, blr.x, blr.y, blr.x + blr.w, blr.y);
-  SDL_RenderDrawLine(renderer, blr.x, blr.y, blr.x, blr.y + blr.h - 1);
+  SDL_FRect blr{ ap.x, ap.y + (mPushed ? 1 : 2), width() - 1, height() - 1 - (mPushed ? 0 : 1) };
+  SDL_RenderLine(renderer, blr.x, blr.y, blr.x + blr.w, blr.y);
+  SDL_RenderLine(renderer, blr.x, blr.y, blr.x, blr.y + blr.h - 1);
 
   SDL_Color bd = (mPushed ? mTheme->mBorderLight : mTheme->mBorderDark).toSdlColor();
   SDL_SetRenderDrawColor(renderer, bd.r, bd.g, bd.b, bd.a);
-  SDL_Rect bdr{ ap.x, ap.y + 1, width() - 1, height() - 2 };
-  SDL_RenderDrawLine(renderer, bdr.x, bdr.y + bdr.h, bdr.x + bdr.w, bdr.y + bdr.h);
-  SDL_RenderDrawLine(renderer, bdr.x + bdr.w, bdr.y, bdr.x + bdr.w, bdr.y + bdr.h);
+  SDL_FRect bdr{ ap.x, ap.y + 1, width() - 1, height() - 2 };
+  SDL_RenderLine(renderer, bdr.x, bdr.y + bdr.h, bdr.x + bdr.w, bdr.y + bdr.h);
+  SDL_RenderLine(renderer, bdr.x + bdr.w, bdr.y, bdr.x + bdr.w, bdr.y + bdr.h);
 
   bd = mTheme->mBorderDark.toSdlColor();
   SDL_SetRenderDrawColor(renderer, bd.r, bd.g, bd.b, bd.a);
-  SDL_RenderDrawRect(renderer, &btnRect);
+  SDL_RenderRect(renderer, &btnRect);
 }
 
 
@@ -276,7 +273,7 @@ void Button::draw(SDL_Renderer* renderer)
 {
   Widget::draw(renderer);
 
-  Vector2i ap = absolutePosition();
+  Vector2f ap = absolutePosition();
   drawBody(renderer);
 
   int fontSize = mFontSize == -1 ? mTheme->mButtonFontSize : mFontSize;
@@ -286,11 +283,11 @@ void Button::draw(SDL_Renderer* renderer)
     if (!mEnabled)
       sdlTextColor = mTheme->mDisabledTextColor;
 
-    mTheme->getTexAndRectUtf8(renderer, _captionTex, 0, 0, mCaption.c_str(), "sans-bold", fontSize, sdlTextColor);
+    mTheme->getTexAndRectUtf8(renderer, _captionTex, 0, 0, mCaption, "sans-bold", fontSize, sdlTextColor);
   }
 
   Vector2f center(ap.x + width() * 0.5f, ap.y + height() * 0.5f);
-  Vector2i textPos(center.x - _captionTex.w() * 0.5f, center.y - _captionTex.h() * 0.5f - 1);
+  Vector2f textPos(center.x - _captionTex.w() * 0.5f, center.y - _captionTex.h() * 0.5f - 1);
   
   int offset = mPushed ? 2 : 0;
 
@@ -320,7 +317,7 @@ void Button::draw(SDL_Renderer* renderer)
     if (mCaption != "")
       iw += _pos.y * 0.15f;
 
-    Vector2i iconPos = center.As<int>();
+    Vector2f iconPos = center;
     iconPos.y -= 1;
 
     if (mIconPosition == IconPosition::LeftCentered) 
@@ -344,33 +341,33 @@ void Button::draw(SDL_Renderer* renderer)
     }
 
     if (nvgIsFontIcon(mIcon)) 
-      SDL_RenderCopy(renderer, _iconTex, iconPos + getTextOffset() + Vector2i(0, - _iconTex.h() * 0.5f + 1));
+      SDL_RenderTexture(renderer, _iconTex, iconPos + getTextOffset() + Vector2f(0, - _iconTex.h() * 0.5f + 1));
     else 
-      SDL_RenderCopy(renderer, _iconTex, iconPos + getTextOffset() + Vector2i(0, - ih / 2));
+      SDL_RenderTexture(renderer, _iconTex, iconPos + getTextOffset() + Vector2f(0, - ih / 2));
   }
 
-  SDL_RenderCopy(renderer, _captionTex, textPos + getTextOffset());
+  SDL_RenderTexture(renderer, _captionTex, textPos + getTextOffset());
 }
 
-Vector2i Button::getTextOffset() const
+Vector2f Button::getTextOffset() const
 {
   int offset = mPushed ? 2 : 0;
-  return Vector2i(offset, 1 + offset);
+  return Vector2f(offset, 1 + offset);
 }
 
-void Button::renderBodyTexture(NVGcontext* &ctx, int &realw, int &realh)
+void Button::renderBodyTexture(NVGcontext* &ctx, float &realw, float &realh)
 {
-  int ww = width();
-  int hh = height();
+  auto ww = width();
+  auto hh = height();
   ctx = nvgCreateRT(NVG_DEBUG, ww + 2, hh + 2, 0);
 
-  float pxRatio = 1.0f;
+  auto pxRatio = 1.0f;
   realw = ww + 2;
   realh = hh + 2;
   nvgBeginFrame(ctx, realw, realh, pxRatio);
 
-  NVGcolor gradTop = mTheme->mButtonGradientTopUnfocused.toNvgColor();
-  NVGcolor gradBot = mTheme->mButtonGradientBotUnfocused.toNvgColor();
+  auto gradTop = mTheme->mButtonGradientTopUnfocused.toNvgColor();
+  auto gradBot = mTheme->mButtonGradientBotUnfocused.toNvgColor();
 
   if (mPushed)
   {
@@ -431,14 +428,14 @@ void Button::drawTexture(AsyncTexturePtr& texture, SDL_Renderer* renderer)
 
     if (texture->tex.tex)
     {
-      SDL_RenderCopy(renderer, texture->tex, absolutePosition());
+      SDL_RenderTexture(renderer, texture->tex, absolutePosition());
 
       if (!current_texture_ || texture->id != current_texture_->id)
         current_texture_ = texture;
     }
     else if (current_texture_)
     {
-      SDL_RenderCopy(renderer, current_texture_->tex, absolutePosition());
+      SDL_RenderTexture(renderer, current_texture_->tex, absolutePosition());
     }
     else
       drawBodyTemp(renderer);

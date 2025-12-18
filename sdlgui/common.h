@@ -11,11 +11,7 @@
 #include <math.h>
 #include <assert.h>
 #include <istream>
-#if defined(_WIN32)
-#include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
+#include <SDL3/SDL.h>
 
 /* Cursor shapes */
 enum class Cursor {
@@ -62,7 +58,7 @@ NAMESPACE_BEGIN(sdlgui)
 struct ImageInfo
 {
   SDL_Texture* tex = nullptr;
-  int w, h;
+  float w, h;
   std::string path;
 };
 typedef std::vector<ImageInfo> ListImages;
@@ -326,13 +322,12 @@ private:
     _Data _d;
 };
 
-struct PntRect { int x1, y1, x2, y2; };
 struct PntFRect { float x1, y1, x2, y2; };
 
-SDL_Rect clip_rects(SDL_Rect af, const SDL_Rect& bf);
-PntRect clip_rects(PntRect a, const PntRect& b);
-PntRect srect2pntrect(const SDL_Rect& srect);
-SDL_Rect pntrect2srect(const PntRect& frect);
+SDL_FRect clip_rects(SDL_FRect af, const SDL_FRect& bf);
+PntFRect clip_rects(PntFRect a, const PntFRect& b);
+PntFRect srect2PntFRect(const SDL_FRect& srect);
+SDL_FRect PntFRect2srect(const PntFRect& frect);
 
 std::string  file_dialog(const std::vector<std::pair<std::string, std::string>> &filetypes, bool save);
 
@@ -421,7 +416,7 @@ public:
   bool operator>=(const Vector2<T>&o) const
   {
     return (x>o.x || math::isEqual(x, o.x)) ||
-            (math::isEqual(x, o.x) && (y>o.Y || math::isEqual(y, o.y)));
+            (math::isEqual(x, o.x) && (y>o.y || math::isEqual(y, o.y)));
   }
 
   //! sort in order X, Y. Difference must be above rounding tolerance.
@@ -710,7 +705,6 @@ public:
   T x = 0, y = 0;
 };
 
-typedef Vector2<int> Vector2i;
 typedef Vector2<float> Vector2f;
 
 std::array<char, 8> utf8(int c);

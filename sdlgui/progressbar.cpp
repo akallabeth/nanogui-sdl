@@ -31,17 +31,17 @@ struct ProgressBar::AsyncTexture
     ProgressBar* pbar = ptr;
     AsyncTexture* self = this;
     std::thread tgr([=]() {
-      Theme* mTheme = pbar->theme();
+      auto mTheme = pbar->theme();
       std::lock_guard<std::mutex> guard(mTheme->loadMutex);
 
-      int ww = pbar->width();
-      int hh = pbar->height();
-      NVGcontext *ctx = nvgCreateRT(NVG_DEBUG, ww + 2, hh + 2, 0);
+      auto ww = pbar->width();
+      auto hh = pbar->height();
+      auto ctx = nvgCreateRT(NVG_DEBUG, ww + 2, hh + 2, 0);
 
-      float pxRatio = 1.0f;
+      auto pxRatio = 1.0f;
       nvgBeginFrame(ctx, ww + 2, hh + 2, pxRatio);
 
-      NVGpaint paint = nvgBoxGradient(ctx, 1, 1, ww - 2, hh, 3, 4, Color(0, 32).toNvgColor(), Color(0, 92).toNvgColor());
+      auto paint = nvgBoxGradient(ctx, 1, 1, ww - 2, hh, 3, 4, Color(0, 32).toNvgColor(), Color(0, 92).toNvgColor());
       nvgBeginPath(ctx);
       nvgRoundedRect(ctx, 0, 0, ww, hh, 3);
       nvgFillPaint(ctx, paint);
@@ -66,20 +66,20 @@ struct ProgressBar::AsyncTexture
     busy = true;
 
     std::thread tgr([=]() {
-      Theme* mTheme = pbar->theme();
+      auto mTheme = pbar->theme();
       std::lock_guard<std::mutex> guard(mTheme->loadMutex);
 
-      int ww = pbar->width();
-      int hh = pbar->height();
-      NVGcontext *ctx = nvgCreateRT(NVG_DEBUG, ww + 2, hh + 2, 0);
+      auto ww = pbar->width();
+      auto hh = pbar->height();
+      auto ctx = nvgCreateRT(NVG_DEBUG, ww + 2, hh + 2, 0);
 
-      float pxRatio = 1.0f;
+      auto pxRatio = 1.0f;
       nvgBeginFrame(ctx, ww + 2, hh + 2, pxRatio);
 
-      float value = std::min(std::max(0.0f, pbar->value()), 1.0f);
-      int barPos = (int)std::round((ww - 2) * value);
+      auto value = std::min(std::max(0.0f, pbar->value()), 1.0f);
+      auto barPos = std::round((ww - 2) * value);
 
-      NVGpaint paint = nvgBoxGradient(
+      auto paint = nvgBoxGradient(
         ctx, 0, 0,
         barPos + 1.5f, hh - 1, 3, 4,
         Color(220, 100).toNvgColor(), Color(128, 100).toNvgColor());
@@ -106,8 +106,8 @@ struct ProgressBar::AsyncTexture
 
     if (tex.tex)
     {
-      int w, h;
-      SDL_QueryTexture(tex.tex, nullptr, nullptr, &w, &h);
+      float w, h;
+      SDL_GetTextureSize(tex.tex, &w, &h);
       if (w != tex.w() || h != tex.h())
         SDL_DestroyTexture(tex.tex);
     }
@@ -138,9 +138,9 @@ void ProgressBar::setValue(float value)
   mValue = value; 
 }
 
-Vector2i ProgressBar::preferredSize(SDL_Renderer *) const
+Vector2f ProgressBar::preferredSize(SDL_Renderer *) const
 {
-    return Vector2i(70, 12);
+    return Vector2f(70, 12);
 }
 
 void ProgressBar::drawBody(SDL_Renderer* renderer)
@@ -153,9 +153,9 @@ void ProgressBar::drawBody(SDL_Renderer* renderer)
 
   if (_body)
   {
-    Vector2i ap = absolutePosition();
+    Vector2f ap = absolutePosition();
     _body->perform(renderer);
-    SDL_RenderCopy(renderer, _body->tex, ap);
+    SDL_RenderTexture(renderer, _body->tex, ap);
   }
 }
 
@@ -169,9 +169,9 @@ void ProgressBar::drawBar(SDL_Renderer* renderer)
 
   if (_bar)
   {
-    Vector2i ap = absolutePosition();
+    Vector2f ap = absolutePosition();
     _bar->perform(renderer);
-    SDL_RenderCopy(renderer, _bar->tex, ap);
+    SDL_RenderTexture(renderer, _bar->tex, ap);
   }
 }
 

@@ -16,11 +16,7 @@
 #include <sdlgui/textbox.h>
 #include <sdlgui/theme.h>
 #include <sdlgui/entypo.h>
-#if defined(_WIN32)
-#include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
+#include <SDL3/SDL.h>
 #include <regex>
 #include <iostream>
 #include <thread>
@@ -46,24 +42,24 @@ struct TextBox::AsyncTexture
     TextBox* tbox = ptr;
     AsyncTexture* self = this;
     std::thread tgr([=]() {
-      Theme* mTheme = tbox->theme();
+      auto mTheme = tbox->theme();
       std::lock_guard<std::mutex> guard(mTheme->loadMutex);
 
-      int ww = tbox->width();
-      int hh = tbox->height();
-      int realw = ww + 2;
-      int realh = hh + 2;
-      int dx = 1, dy = 1;
-      NVGcontext *ctx = nvgCreateRT(NVG_DEBUG, realw, realh + 2, 0);
+      auto ww = tbox->width();
+      auto hh = tbox->height();
+      auto realw = ww + 2;
+      auto realh = hh + 2;
+      auto dx = 1, dy = 1;
+      auto ctx = nvgCreateRT(NVG_DEBUG, realw, realh + 2, 0);
 
-      float pxRatio = 1.0f;
+      auto pxRatio = 1.0f;
       nvgBeginFrame(ctx, realw, realh, pxRatio);
 
-      NVGpaint bg = nvgBoxGradient(ctx, dx + 1, dy + 1 + 1.0f, ww - 2, hh - 2,
+      auto bg = nvgBoxGradient(ctx, dx + 1, dy + 1 + 1.0f, ww - 2, hh - 2,
         3, 4, Color(255, 128).toNvgColor(), Color(32, 32).toNvgColor());
-      NVGpaint fg1 = nvgBoxGradient(ctx, dx + 1, dy + 1 + 1.0f, ww - 2, hh - 2,
+      auto fg1 = nvgBoxGradient(ctx, dx + 1, dy + 1 + 1.0f, ww - 2, hh - 2,
         3, 4, Color(150, 32).toNvgColor(), Color(32, 32).toNvgColor());
-      NVGpaint fg2 = nvgBoxGradient(ctx, dx + 1, dy + 1 + 1.0f, ww - 2, hh - 2,
+      auto fg2 = nvgBoxGradient(ctx, dx + 1, dy + 1 + 1.0f, ww - 2, hh - 2,
         3, 4, nvgRGBA(255, 0, 0, 100), nvgRGBA(255, 0, 0, 50));
 
       nvgBeginPath(ctx);
@@ -104,8 +100,8 @@ struct TextBox::AsyncTexture
 
     if (tex.tex)
     {
-      int w, h;
-      SDL_QueryTexture(tex.tex, nullptr, nullptr, &w, &h);
+      float w, h;
+      SDL_GetTextureSize(tex.tex, &w, &h);
       if (w != tex.w() || h != tex.h())
         SDL_DestroyTexture(tex.tex);
     }
@@ -140,9 +136,9 @@ TextBox::TextBox(Widget *parent,const std::string &value, const std::string& uni
       mValueTemp(value),
       mCursorPos(-1),
       mSelectionPos(-1),
-      mMousePos(Vector2i(-1,-1)),
-      mMouseDownPos(Vector2i(-1,-1)),
-      mMouseDragPos(Vector2i(-1,-1)),
+      mMousePos(Vector2f(-1,-1)),
+      mMouseDownPos(Vector2f(-1,-1)),
+      mMouseDragPos(Vector2f(-1,-1)),
       mMouseDownModifier(0),
       mTextOffset(0),
       mLastClick(0) 
@@ -167,9 +163,9 @@ void TextBox::setTheme(Theme *theme)
         mFontSize = mTheme->mTextBoxFontSize;
 }
 
-Vector2i TextBox::preferredSize(SDL_Renderer *ctx) const
+Vector2f TextBox::preferredSize(SDL_Renderer *ctx) const
 {
-  Vector2i size(0, fontSize() * 1.4f);
+  Vector2f size(0, fontSize() * 1.4f);
 
     float uw = 0;
     if (mUnitsImage > 0)
@@ -221,11 +217,11 @@ void TextBox::draw(SDL_Renderer* renderer)
 {
     Widget::draw(renderer);
 
-    SDL_Point ap = getAbsolutePos();
+    auto ap = getAbsolutePos();
 
     drawBody(renderer);
 
-    Vector2i drawPos = absolutePosition();
+    Vector2f drawPos = absolutePosition();
     float unitWidth = 0;
 
     if (mUnitsImage > 0) 
@@ -251,7 +247,7 @@ void TextBox::draw(SDL_Renderer* renderer)
         mTheme->getTexAndRectUtf8(renderer, _unitsTex, 0, 0, mUnits.c_str(), "sans", fontSize(), Color(255, mEnabled ? 64 : 32));
 
       unitWidth = _unitsTex.w()+2;
-      SDL_RenderCopy(renderer, _unitsTex, absolutePosition() + Vector2i(mSize.x - unitWidth, (mSize.y - _unitsTex.h()) * 0.5f));
+      SDL_RenderTexture(renderer, _unitsTex, absolutePosition() + Vector2f(mSize.x - unitWidth, (mSize.y - _unitsTex.h()) * 0.5f));
       unitWidth += (2+2);
     }
 
@@ -313,21 +309,21 @@ void TextBox::draw(SDL_Renderer* renderer)
     float clipWidth = mSize.x - unitWidth - spinArrowsWidth + 2.0f;
     float clipHeight = mSize.y - 3.0f;
 
-    Vector2i oldDrawPos(drawPos);
+    Vector2f oldDrawPos(drawPos);
     drawPos.x += mTextOffset; 
     drawPos.y += (mSize.y - _captionTex.h()) / 2;
 
     if (_captionTex.dirty)
-      mTheme->getTexAndRectUtf8(renderer, _captionTex, 0, 0, mValue.c_str(), "sans", fontSize(), mEnabled ? mTheme->mTextColor : mTheme->mDisabledTextColor);
+      mTheme->getTexAndRectUtf8(renderer, _captionTex, 0, 0, mValue, "sans", fontSize(), mEnabled ? mTheme->mTextColor : mTheme->mDisabledTextColor);
 
     if (mCommitted) 
     {
-      SDL_RenderCopy(renderer, _captionTex, drawPos);
+      SDL_RenderTexture(renderer, _captionTex, drawPos);
     } 
     else 
     {
       int w, h;
-      mTheme->getUtf8Bounds("sans", fontSize(), mValueTemp.c_str(), &w, &h);
+      mTheme->getUtf8Bounds("sans", fontSize(), mValueTemp, &w, &h);
       float textBound[4] = {(float)drawPos.x, (float)drawPos.y, (float)(drawPos.x + w), (float)(drawPos.y + h)};
       float lineh = textBound[3] - textBound[1];
 
@@ -351,7 +347,7 @@ void TextBox::draw(SDL_Renderer* renderer)
           mTheme->getTexAndRectUtf8(renderer, _tempTex, 0, 0, mValueTemp.c_str(), "sans", fontSize(), mTheme->mTextColor);
        
         // draw text with offset
-        SDL_RenderCopy(renderer, _tempTex, oldDrawPos);
+        SDL_RenderTexture(renderer, _tempTex, oldDrawPos);
 
         if (mCursorPos > -1) 
         {
@@ -365,10 +361,10 @@ void TextBox::draw(SDL_Renderer* renderer)
 
                 // draw selection
                 SDL_Color c = Color(255, 255, 255, 80).toSdlColor();
-                SDL_Rect sr{ 
-                    (int)std::round(oldDrawPos.x + caretx),
+                SDL_FRect sr{ 
+                    std::round(oldDrawPos.x + caretx),
                     oldDrawPos.y + 4, 
-                    (int)std::round(selx - caretx), 
+                    std::round(selx - caretx), 
                     height() - 4
                 };
                 SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
@@ -383,14 +379,14 @@ void TextBox::draw(SDL_Renderer* renderer)
 
               SDL_Color c = Color(255, 192, 0, 255).toSdlColor();
               SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
-              SDL_RenderDrawLine(renderer, oldDrawPos.x + caretx, oldDrawPos.y + 4,
+              SDL_RenderLine(renderer, oldDrawPos.x + caretx, oldDrawPos.y + 4,
                 oldDrawPos.x + caretx, oldDrawPos.y + lineh - 3);
             }
         }
     }
 }
 
-bool TextBox::mouseButtonEvent(const Vector2i &p, int button, bool down,
+bool TextBox::mouseButtonEvent(const Vector2f &p, int button, bool down,
                                int modifiers)
 {
     if (button == SDL_BUTTON_LEFT && down && !mFocused)
@@ -411,14 +407,14 @@ bool TextBox::mouseButtonEvent(const Vector2i &p, int button, bool down,
                 /* Double-click: select all text */
                 mSelectionPos = 0;
                 mCursorPos = (int) mValueTemp.size();
-                mMouseDownPos = Vector2i{ -1, -1 };
+                mMouseDownPos = Vector2f{ -1, -1 };
             }
             mLastClick = time;
         } 
         else
         {
-          mMouseDownPos = Vector2i{ -1, -1 };
-          mMouseDragPos = Vector2i{ -1, -1 };
+          mMouseDownPos = Vector2f{ -1, -1 };
+          mMouseDragPos = Vector2f{ -1, -1 };
         }
         return true;
     } 
@@ -439,20 +435,20 @@ bool TextBox::mouseButtonEvent(const Vector2i &p, int button, bool down,
                     if (mCallback)
                         mCallback(mValue);
 
-                    mMouseDownPos = Vector2i{ -1, -1 };
+                    mMouseDownPos = Vector2f{ -1, -1 };
                 }
                 mLastClick = time;
             } 
             else 
             {
-              mMouseDownPos = Vector2i{ -1, -1 };
-              mMouseDragPos = Vector2i{ -1, -1 };
+              mMouseDownPos = Vector2f{ -1, -1 };
+              mMouseDragPos = Vector2f{ -1, -1 };
             }
         } 
         else 
         {
-            mMouseDownPos = Vector2i{ -1, -1 };
-            mMouseDragPos = Vector2i{ -1, -1 };
+            mMouseDownPos = Vector2f{ -1, -1 };
+            mMouseDragPos = Vector2f{ -1, -1 };
         }
         return true;
     }
@@ -460,7 +456,7 @@ bool TextBox::mouseButtonEvent(const Vector2i &p, int button, bool down,
     return false;
 }
 
-bool TextBox::mouseMotionEvent(const Vector2i &p, const Vector2i & /* rel */,
+bool TextBox::mouseMotionEvent(const Vector2f &p, const Vector2f & /* rel */,
                                int /* button */, int /* modifiers */) 
 {
     mMousePos = p;
@@ -479,7 +475,7 @@ bool TextBox::mouseMotionEvent(const Vector2i &p, const Vector2i & /* rel */,
     return false;
 }
 
-bool TextBox::mouseDragEvent(const Vector2i &p, const Vector2i &/* rel */,
+bool TextBox::mouseDragEvent(const Vector2f &p, const Vector2f &/* rel */,
                              int /* button */, int /* modifiers */) 
 {
     mMousePos = p;
@@ -534,15 +530,15 @@ bool TextBox::focusEvent(bool focused)
     return true;
 }
 
-bool TextBox::keyboardEvent(int key, int /* scancode */, int action, int modifiers) 
+bool TextBox::keyboardEvent(int key, int /* scancode */, bool action, uint16_t modifiers) 
 {
     if (mEditable && focused()) 
     {
-        if (action == SDL_PRESSED) 
+        if (action) 
         {
             if (key == SDLK_LEFT) 
             {
-                if (modifiers & KMOD_SHIFT) 
+                if (modifiers & SDL_KMOD_SHIFT) 
                 {
                     if (mSelectionPos == -1)
                         mSelectionPos = mCursorPos;
@@ -557,7 +553,7 @@ bool TextBox::keyboardEvent(int key, int /* scancode */, int action, int modifie
             } 
             else if (key == SDLK_RIGHT) 
             {
-                if (modifiers & KMOD_SHIFT) 
+                if (modifiers & SDL_KMOD_SHIFT) 
                 {
                     if (mSelectionPos == -1)
                         mSelectionPos = mCursorPos;
@@ -572,7 +568,7 @@ bool TextBox::keyboardEvent(int key, int /* scancode */, int action, int modifie
             } 
             else if (key == SDLK_HOME) 
             {
-                if (modifiers & KMOD_SHIFT) 
+                if (modifiers & SDL_KMOD_SHIFT) 
                 {
                     if (mSelectionPos == -1)
                         mSelectionPos = mCursorPos;
@@ -586,7 +582,7 @@ bool TextBox::keyboardEvent(int key, int /* scancode */, int action, int modifie
             } 
             else if (key == SDLK_END) 
             {
-                if (modifiers & KMOD_SHIFT) 
+                if (modifiers & SDL_KMOD_SHIFT) 
                 {
                     if (mSelectionPos == -1)
                         mSelectionPos = mCursorPos;
@@ -624,21 +620,21 @@ bool TextBox::keyboardEvent(int key, int /* scancode */, int action, int modifie
                 if (!mCommitted)
                     focusEvent(false);
             } 
-            else if (key == SDLK_a && modifiers & SDLK_LCTRL) 
+            else if (key == SDLK_A && modifiers & SDLK_LCTRL) 
             {
                 mCursorPos = (int) mValueTemp.length();
                 mSelectionPos = 0;
             } 
-            else if (key == SDLK_x && modifiers & SDLK_LCTRL)
+            else if (key == SDLK_X && modifiers & SDLK_LCTRL)
             {
                 copySelection();
                 deleteSelection();
             } 
-            else if (key == SDLK_c && modifiers & SDLK_LCTRL)
+            else if (key == SDLK_C && modifiers & SDLK_LCTRL)
             {
                 copySelection();
             } 
-            else if (key == SDLK_v && modifiers & SDLK_LCTRL)
+            else if (key == SDLK_V && modifiers & SDLK_LCTRL)
             {
                 deleteSelection();
                 pasteFromClipboard();
@@ -754,7 +750,7 @@ void TextBox::updateCursor(float lastx, const std::string& str)
     // handle mouse cursor events
     if (mMouseDownPos.x != -1) 
     {
-        if (mMouseDownModifier == KMOD_SHIFT) 
+        if (mMouseDownModifier == SDL_KMOD_SHIFT) 
         {
             if (mSelectionPos == -1)
                 mSelectionPos = mCursorPos;
@@ -764,7 +760,7 @@ void TextBox::updateCursor(float lastx, const std::string& str)
 
         mCursorPos = position2CursorIndex(mMouseDownPos.x, lastx, str);
 
-        mMouseDownPos = Vector2i{ -1, -1 };
+        mMouseDownPos = Vector2f{ -1, -1 };
     } 
     else if (mMouseDragPos.x != -1) 
     {
@@ -814,7 +810,7 @@ int TextBox::position2CursorIndex(float posx, float lastx, const std::string& st
     return mCursorId;
 }
 
-TextBox::SpinArea TextBox::spinArea(const Vector2i & pos)
+TextBox::SpinArea TextBox::spinArea(const Vector2f & pos)
 {
     if (0 <= pos.x - _pos.x && pos.x - _pos.x < 14.f) 
     { /* on scrolling arrows */
@@ -839,14 +835,14 @@ void TextBox::drawTexture(AsyncTexturePtr& texture, SDL_Renderer* renderer)
 
     if (texture->tex.tex)
     {
-      SDL_RenderCopy(renderer, texture->tex, absolutePosition());
+      SDL_RenderTexture(renderer, texture->tex, absolutePosition());
 
       if (!current_texture_ || texture->id != current_texture_->id)
         current_texture_ = texture;
     }
     else if (current_texture_)
     {
-      SDL_RenderCopy(renderer, current_texture_->tex, absolutePosition());
+      SDL_RenderTexture(renderer, current_texture_->tex, absolutePosition());
     }
   }
 }

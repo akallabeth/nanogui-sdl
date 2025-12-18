@@ -9,11 +9,8 @@
 */
 
 #include <sdlgui/checkbox.h>
-#if defined(_WIN32)
-#include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
+#include <SDL3/SDL.h>
+
 #include <sdlgui/theme.h>
 #include <sdlgui/entypo.h>
 #include <array>
@@ -39,18 +36,18 @@ struct CheckBox::AsyncTexture
     CheckBox* cb = ptr;
     AsyncTexture* self = this;
     std::thread tgr([=]() {
-      Theme* theme = cb->theme();
-      Color b = Color(0, 0, 0, 180);
-      Color c = pushed ? Color(0, 100) : Color(0, 32);
+      auto theme = cb->theme();
+      auto b = Color(0, 0, 0, 180);
+      auto c = pushed ? Color(0, 100) : Color(0, 32);
 
-      int ww = cb->width();
-      int hh = cb->height();
-      NVGcontext *ctx = nvgCreateRT(NVG_DEBUG, ww + 2, hh + 2, 0);
+      auto ww = cb->width();
+      auto hh = cb->height();
+      auto ctx = nvgCreateRT(NVG_DEBUG, ww + 2, hh + 2, 0);
 
-      float pxRatio = 1.0f;
+      auto pxRatio = 1.0f;
       nvgBeginFrame(ctx, ww + 2, hh + 2, pxRatio);
 
-      NVGpaint bg = nvgBoxGradient(ctx, 1.5f, 1.5f, hh - 2.0f, hh - 2.0f, 3, 3, c.toNvgColor(), b.toNvgColor());
+      auto bg = nvgBoxGradient(ctx, 1.5f, 1.5f, hh - 2.0f, hh - 2.0f, 3, 3, c.toNvgColor(), b.toNvgColor());
 
       nvgBeginPath(ctx);
       nvgRoundedRect(ctx, 1.0f, 1.0f, hh - 2.0f, hh - 2.0f, 3);
@@ -71,16 +68,20 @@ struct CheckBox::AsyncTexture
     if (!ctx)
       return;
 
-    unsigned char *rgba = nvgReadPixelsRT(ctx);
-
-    tex.tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, tex.w(), tex.h());
+    auto rgba = nvgReadPixelsRT(ctx);
+    
+    const int w = tex.w();
+    const int h = tex.h();
+    tex.tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, w, h);
 
     int pitch;
-    uint8_t *pixels;
-    int ok = SDL_LockTexture(tex.tex, nullptr, (void **)&pixels, &pitch);
-    memcpy(pixels, rgba, sizeof(uint32_t) * tex.w() * tex.h());
-    SDL_SetTextureBlendMode(tex.tex, SDL_BLENDMODE_BLEND);
-    SDL_UnlockTexture(tex.tex);
+    uint8_t *pixels = nullptr;
+    auto ok = SDL_LockTexture(tex.tex, nullptr, (void **)&pixels, &pitch);
+    if (ok) {
+        memcpy(pixels, rgba, sizeof(uint32_t) * w * h);
+        SDL_SetTextureBlendMode(tex.tex, SDL_BLENDMODE_BLEND);
+        SDL_UnlockTexture(tex.tex);
+    }
 
     nvgDeleteRT(ctx);
     ctx = nullptr;
@@ -97,7 +98,7 @@ CheckBox::CheckBox(Widget *parent, const std::string &caption,
   _pointTex.dirty = true;
 }
 
-bool CheckBox::mouseButtonEvent(const Vector2i &p, int button, bool down,
+bool CheckBox::mouseButtonEvent(const Vector2f &p, int button, bool down,
                                 int modifiers) 
 {
     Widget::mouseButtonEvent(p, button, down, modifiers);
@@ -125,14 +126,14 @@ bool CheckBox::mouseButtonEvent(const Vector2i &p, int button, bool down,
     return false;
 }
 
-Vector2i CheckBox::preferredSize(SDL_Renderer *ctx) const
+Vector2f CheckBox::preferredSize(SDL_Renderer *ctx) const
 {
-    if (mFixedSize != Vector2i::Zero())
+    if (mFixedSize != Vector2f::Zero())
         return mFixedSize;
 
     int w, h;
-    const_cast<CheckBox*>(this)->mTheme->getTextBounds("sans", fontSize(), mCaption.c_str(), &w, &h);
-    return Vector2i(w + 1.7f * fontSize(),  fontSize() * 1.3f);
+    const_cast<CheckBox*>(this)->mTheme->getTextBounds("sans", fontSize(), mCaption, &w, &h);
+    return Vector2f(w + 1.7f * fontSize(),  fontSize() * 1.3f);
 }
 
 void CheckBox::drawBody(SDL_Renderer* renderer)
@@ -161,17 +162,17 @@ void CheckBox::draw(SDL_Renderer *renderer)
   if (_captionTex.dirty)
   {
     Color tColor = (mEnabled ? mTheme->mTextColor : mTheme->mDisabledTextColor);
-    mTheme->getTexAndRectUtf8(renderer, _captionTex, 0, 0, mCaption.c_str(), "sans", fontSize(), tColor);
+    mTheme->getTexAndRectUtf8(renderer, _captionTex, 0, 0, mCaption, "sans", fontSize(), tColor);
     mTheme->getTexAndRectUtf8(renderer, _pointTex, 0, 0, utf8(ENTYPO_ICON_CHECK).data(), "icons", 1.8 * mSize.y, tColor);
   }
  
   auto ap = absolutePosition();
-  SDL_RenderCopy(renderer, _captionTex, ap + Vector2i(1.2f * mSize.y + 5, (mSize.y - _captionTex.h()) * 0.5f) );
+  SDL_RenderTexture(renderer, _captionTex, ap + Vector2f(1.2f * mSize.y + 5, (mSize.y - _captionTex.h()) * 0.5f) );
 
   drawBody(renderer);
   
   if (mChecked) 
-    SDL_RenderCopy(renderer, _pointTex, ap + Vector2i((mSize.y - _pointTex.w()) * 0.5f + 1,  (mSize.y - _pointTex.h()) * 0.5f));
+    SDL_RenderTexture(renderer, _pointTex, ap + Vector2f((mSize.y - _pointTex.w()) * 0.5f + 1,  (mSize.y - _pointTex.h()) * 0.5f));
 }
 
 void CheckBox::drawTexture(AsyncTexturePtr& texture, SDL_Renderer* renderer)
@@ -182,14 +183,14 @@ void CheckBox::drawTexture(AsyncTexturePtr& texture, SDL_Renderer* renderer)
 
     if (texture->tex.tex)
     {
-      SDL_RenderCopy(renderer, texture->tex, absolutePosition());
+      SDL_RenderTexture(renderer, texture->tex, absolutePosition());
 
       if (!current_texture_ || texture->id != current_texture_->id)
         current_texture_ = texture;
     }
     else if (current_texture_)
     {
-      SDL_RenderCopy(renderer, current_texture_->tex, absolutePosition());
+      SDL_RenderTexture(renderer, current_texture_->tex, absolutePosition());
     }
   }
 }

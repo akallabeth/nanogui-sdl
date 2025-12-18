@@ -73,7 +73,7 @@ void ComboBox::setItems(const std::vector<std::string> &items, const std::vector
     setSelectedIndex(mSelectedIndex);
 }
 
-bool ComboBox::scrollEvent(const Vector2i &p, const Vector2f &rel)
+bool ComboBox::scrollEvent(const Vector2f &p, const Vector2f &rel)
 {
     if (rel.y < 0) 
     {

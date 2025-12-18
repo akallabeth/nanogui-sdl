@@ -12,11 +12,7 @@
 
 #include <sdlgui/colorwheel.h>
 #include <sdlgui/theme.h>
-#if defined(_WIN32)
-#include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
+#include <SDL3/SDL.h>
 
 NAMESPACE_BEGIN(sdlgui)
 
@@ -26,7 +22,7 @@ ColorWheel::ColorWheel(Widget *parent, const Color& rgb)
     setColor(rgb);
 }
 
-Vector2i ColorWheel::preferredSize(SDL_Renderer *) const
+Vector2f ColorWheel::preferredSize(SDL_Renderer *) const
 {
     return { 100, 100 };
 }
@@ -144,7 +140,7 @@ void ColorWheel::draw(SDL_Renderer *renderer)
     */
 }
 
-bool ColorWheel::mouseButtonEvent(const Vector2i &p, int button, bool down,
+bool ColorWheel::mouseButtonEvent(const Vector2f &p, int button, bool down,
                                   int modifiers) 
 {
     Widget::mouseButtonEvent(p, button, down, modifiers);
@@ -160,13 +156,13 @@ bool ColorWheel::mouseButtonEvent(const Vector2i &p, int button, bool down,
     }
 }
 
-bool ColorWheel::mouseDragEvent(const Vector2i &p, const Vector2i &,
+bool ColorWheel::mouseDragEvent(const Vector2f &p, const Vector2f &,
                                 int, int) 
 {
     return adjustPosition(p, mDragRegion) != None;
 }
 
-ColorWheel::Region ColorWheel::adjustPosition(const Vector2i &p, Region consideredRegions)
+ColorWheel::Region ColorWheel::adjustPosition(const Vector2f &p, Region consideredRegions)
 {
  /*   float x = p.x - _pos.x,
           y = p.y - _pos.y,

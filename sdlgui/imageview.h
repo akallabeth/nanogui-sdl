@@ -27,15 +27,15 @@ class  ImageView : public Widget
 {
 public:
     ImageView(Widget* parent, SDL_Texture *texture);
-    ~ImageView();
+    ~ImageView() override;
 
     void bindImage(SDL_Texture* texture);
 
     Vector2f positionF() const { return _pos.tofloat(); }
     Vector2f sizeF() const { return mSize.tofloat(); }
 
-    const Vector2i& imageSize() const { return mImageSize; }
-    Vector2i scaledImageSize() const { return (mImageSize.tofloat() * mScale).toint(); }
+    const Vector2f& imageSize() const { return mImageSize; }
+    Vector2f scaledImageSize() const { return (mImageSize * mScale); }
     Vector2f imageSizeF() const { return mImageSize.tofloat(); }
     Vector2f scaledImageSizeF() const { return (mImageSize.tofloat() * mScale); }
 
@@ -59,11 +59,11 @@ public:
     void setPixelInfoThreshold(float pixelInfoThreshold) { mPixelInfoThreshold = pixelInfoThreshold; }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-    void setPixelInfoCallback(const std::function<std::pair<std::string, Color>(const Vector2i&)>& callback) 
+    void setPixelInfoCallback(const std::function<std::pair<std::string, Color>(const Vector2f&)>& callback) 
     {
         mPixelInfoCallback = callback;
     }
-    const std::function<std::pair<std::string, Color>(const Vector2i&)>& pixelInfoCallback() const 
+    const std::function<std::pair<std::string, Color>(const Vector2f&)>& pixelInfoCallback() const 
     {
         return mPixelInfoCallback;
     }
@@ -113,10 +113,10 @@ public:
      */
     void zoom(int amount, const Vector2f& focusPosition);
 
-    bool keyboardEvent(int key, int scancode, int action, int modifiers) override;
+    bool keyboardEvent(int key, int scancode, bool action, uint16_t modifiers) override;
     bool keyboardCharacterEvent(unsigned int codepoint) override;
-    bool mouseDragEvent(const Vector2i &p, const Vector2i &rel, int button, int modifiers) override;
-    bool scrollEvent(const Vector2i &p, const Vector2f &rel) override;
+    bool mouseDragEvent(const Vector2f &p, const Vector2f &rel, int button, int modifiers) override;
+    bool scrollEvent(const Vector2f &p, const Vector2f &rel) override;
 
     /// Function indicating whether the grid is currently visible.
     bool gridVisible() const;
@@ -127,7 +127,7 @@ public:
     /// Function indicating whether any of the overlays are visible.
     bool helpersVisible() const;
 
-    Vector2i preferredSize(SDL_Renderer* ctx) const override;
+    Vector2f preferredSize(SDL_Renderer* ctx) const override;
     void performLayout(SDL_Renderer* ctx) override;
     void draw(SDL_Renderer* renderer);
 
@@ -138,17 +138,17 @@ private:
     void updateImageParameters();
 
     // Helper drawing methods.
-    void drawWidgetBorder(SDL_Renderer* ctx, const SDL_Point& ap) const;
-    void drawImageBorder(SDL_Renderer* ctx, const SDL_Point& ap) const;
+    void drawWidgetBorder(SDL_Renderer* ctx, const SDL_FPoint& ap) const;
+    void drawImageBorder(SDL_Renderer* ctx, const SDL_FPoint& ap) const;
     void drawHelpers(SDL_Renderer* ctx) const;
     static void drawPixelGrid(SDL_Renderer* ctx, const Vector2f& upperLeftCorner,
                               const Vector2f& lowerRightCorner, const float stride);
     void drawPixelInfo(SDL_Renderer* ctx, const float stride) const;
     void writePixelInfo(SDL_Renderer* ctx, const Vector2f& cellPosition,
-                        const Vector2i& pixel, const float stride) const;
+                        const Vector2f& pixel, const float stride) const;
 
     SDL_Texture* mTexture = nullptr;
-    Vector2i mImageSize;
+    Vector2f mImageSize;
 
     // Image display parameters.
     float mScale;
@@ -164,7 +164,7 @@ private:
     float mPixelInfoThreshold = -1;
 
     // Image pixel data display members.
-    std::function<std::pair<std::string, Color>(const Vector2i&)> mPixelInfoCallback;
+    std::function<std::pair<std::string, Color>(const Vector2f&)> mPixelInfoCallback;
     float mFontScaleFactor = 0.2f;
 };
 

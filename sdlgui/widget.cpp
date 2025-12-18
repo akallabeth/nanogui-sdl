@@ -13,18 +13,14 @@
 #include <sdlgui/theme.h>
 #include <sdlgui/window.h>
 #include <sdlgui/screen.h>
-#if defined(_WIN32)
-#include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
+#include <SDL3/SDL.h>
 
 NAMESPACE_BEGIN(sdlgui)
 
 Widget::Widget(Widget *parent)
     : mParent(nullptr), mTheme(nullptr), mLayout(nullptr),
-      _pos(Vector2i::Zero()), mSize(Vector2i::Zero()),
-      mFixedSize(Vector2i::Zero()), mVisible(true), mEnabled(true),
+      _pos(Vector2f::Zero()), mSize(Vector2f::Zero()),
+      mFixedSize(Vector2f::Zero()), mVisible(true), mEnabled(true),
       mFocused(false), mMouseFocus(false), mTooltip(""), mFontSize(-1.0f),
       mCursor(Cursor::Arrow) 
 {
@@ -57,7 +53,7 @@ int Widget::fontSize() const
                       : mFontSize;
 }
 
-Vector2i Widget::preferredSize(SDL_Renderer *ctx) const 
+Vector2f Widget::preferredSize(SDL_Renderer *ctx) const 
 {
     if (mLayout)
         return mLayout->preferredSize(ctx, this);
@@ -75,8 +71,8 @@ void Widget::performLayout(SDL_Renderer *ctx)
     {
         for (auto c : mChildren) 
         {
-          Vector2i pref = c->preferredSize(ctx), fix = c->fixedSize();
-            c->setSize(Vector2i(
+          Vector2f pref = c->preferredSize(ctx), fix = c->fixedSize();
+            c->setSize(Vector2f(
                 fix[0] ? fix[0] : pref[0],
                 fix[1] ? fix[1] : pref[1]
             ));
@@ -103,7 +99,7 @@ Widget* Widget::find(const std::string& id, bool inchildren)
   return nullptr;
 }
 
-Widget *Widget::findWidget(const Vector2i &p)
+Widget *Widget::findWidget(const Vector2f &p)
 {
     for (auto it = mChildren.rbegin(); it != mChildren.rend(); ++it) 
     {
@@ -114,7 +110,7 @@ Widget *Widget::findWidget(const Vector2i &p)
     return contains(p) ? this : nullptr;
 }
 
-bool Widget::mouseButtonEvent(const Vector2i &p, int button, bool down, int modifiers)
+bool Widget::mouseButtonEvent(const Vector2f &p, int button, bool down, int modifiers)
 {
     for (auto it = mChildren.rbegin(); it != mChildren.rend(); ++it) 
     {
@@ -129,7 +125,7 @@ bool Widget::mouseButtonEvent(const Vector2i &p, int button, bool down, int modi
     return false;
 }
 
-bool Widget::mouseMotionEvent(const Vector2i &p, const Vector2i &rel, int button, int modifiers)
+bool Widget::mouseMotionEvent(const Vector2f &p, const Vector2f &rel, int button, int modifiers)
 {
     for (auto it = mChildren.rbegin(); it != mChildren.rend(); ++it) 
     {
@@ -147,7 +143,7 @@ bool Widget::mouseMotionEvent(const Vector2i &p, const Vector2i &rel, int button
     return false;
 }
 
-bool Widget::scrollEvent(const Vector2i &p, const Vector2f &rel)
+bool Widget::scrollEvent(const Vector2f &p, const Vector2f &rel)
 {
     for (auto it = mChildren.rbegin(); it != mChildren.rend(); ++it) 
     {
@@ -160,12 +156,12 @@ bool Widget::scrollEvent(const Vector2i &p, const Vector2f &rel)
     return false;
 }
 
-bool Widget::mouseDragEvent(const Vector2i &, const Vector2i &, int, int)
+bool Widget::mouseDragEvent(const Vector2f &, const Vector2f &, int, int)
 {
     return false;
 }
 
-bool Widget::mouseEnterEvent(const Vector2i &, bool enter)
+bool Widget::mouseEnterEvent(const Vector2f &, bool enter)
 {
     mMouseFocus = enter;
     return false;
@@ -177,7 +173,7 @@ bool Widget::focusEvent(bool focused)
     return false;
 }
 
-bool Widget::keyboardEvent(int, int, int, int) 
+bool Widget::keyboardEvent(int, int, bool, uint16_t) 
 {
     return false;
 }
@@ -237,31 +233,31 @@ Window *Widget::window()
     }
 }
 
-int Widget::getAbsoluteLeft() const
+float Widget::getAbsoluteLeft() const
 {
   return mParent
     ? mParent->getAbsoluteLeft() + _pos.x
     : _pos.x;
 }
 
-SDL_Point Widget::getAbsolutePos() const
+SDL_FPoint Widget::getAbsolutePos() const
 {
   if (mParent)
   {
-    SDL_Point p = mParent->getAbsolutePos();
-    return SDL_Point{ p.x + _pos.x, p.y + _pos.y };
+    auto p = mParent->getAbsolutePos();
+    return SDL_FPoint{ p.x + _pos.x, p.y + _pos.y };
   }
   else
-    return SDL_Point{ _pos.x, _pos.y };
+    return SDL_FPoint{ _pos.x, _pos.y };
 }
 
-PntRect Widget::getAbsoluteCliprect() const
+PntFRect Widget::getAbsoluteCliprect() const
 {
   if (mParent)
   {
-    PntRect pclip = mParent->getAbsoluteCliprect();
-    SDL_Point pp = getAbsolutePos();
-    PntRect mclip{ pp.x, pp.y, pp.x + width(), pp.y + height() };
+    auto pclip = mParent->getAbsoluteCliprect();
+    auto pp = getAbsolutePos();
+    PntFRect mclip{ pp.x, pp.y, pp.x + width(), pp.y + height() };
     if (pclip.x1 < mclip.x1)
       pclip.x1 = mclip.x1;
     if (pclip.y1 < mclip.y1)
@@ -275,11 +271,11 @@ PntRect Widget::getAbsoluteCliprect() const
   }
   else
   {
-    return PntRect{ _pos.x, _pos.y, _pos.x + width(), _pos.y + height()};
+    return PntFRect{ _pos.x, _pos.y, _pos.x + width(), _pos.y + height()};
   }
 }
 
-int Widget::getAbsoluteTop() const
+float Widget::getAbsoluteTop() const
 {
   return mParent
     ? mParent->getAbsoluteTop() + _pos.y

@@ -44,7 +44,7 @@ public:
 
     ComboBox& withItems(const std::vector<std::string>& items) {setItems(items); return *this;}
 
-    bool scrollEvent(const Vector2i &p, const Vector2f &rel);
+    bool scrollEvent(const Vector2f &p, const Vector2f &rel);
 
 protected:
     std::vector<std::string> mItems, mItemsShort;

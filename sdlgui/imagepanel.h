@@ -34,19 +34,19 @@ public:
     std::function<void(int)> callback() const { return mCallback; }
     void setCallback(const std::function<void(int)> &callback) { mCallback = callback; }
 
-    bool mouseMotionEvent(const Vector2i &p, const Vector2i &rel, int button, int modifiers) override;
-    bool mouseButtonEvent(const Vector2i &p, int button, bool down, int modifiers) override;
-    Vector2i preferredSize(SDL_Renderer *ctx) const override;
+    bool mouseMotionEvent(const Vector2f &p, const Vector2f &rel, int button, int modifiers) override;
+    bool mouseButtonEvent(const Vector2f &p, int button, bool down, int modifiers) override;
+    Vector2f preferredSize(SDL_Renderer *ctx) const override;
     void draw(SDL_Renderer* renderer) override;
 
     ImagePanel& withImages(const ListImages& data ) { setImages(data); return *this; }
 protected:
-  Vector2i gridSize() const;
-    int indexForPosition(const Vector2i &p) const;
+  Vector2f gridSize() const;
+    int indexForPosition(const Vector2f &p) const;
 protected:
   ListImages mImages;
     std::function<void(int)> mCallback;
-    int mThumbSize;
+    float mThumbSize;
     int mSpacing;
     int mMargin;
     int mMouseIndex;

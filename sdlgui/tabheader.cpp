@@ -13,11 +13,7 @@
 #include <sdlgui/tabheader.h>
 #include <sdlgui/theme.h>
 #include <sdlgui/entypo.h>
-#if defined(_WIN32)
-#include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
+#include <SDL3/SDL.h>
 #include <numeric>
 #include <array>
 #include <cmath>
@@ -31,22 +27,22 @@ TabHeader::TabButton::TabButton(TabHeader &header, const std::string &label)
   _labelTex.dirty = true;
 }
 
-Vector2i TabHeader::TabButton::preferredSize(SDL_Renderer *ctx) const
+Vector2f TabHeader::TabButton::preferredSize(SDL_Renderer *ctx) const
 {
     // No need to call nvg font related functions since this is done by the tab header implementation
     int w, h;
     auto theme = const_cast<TabButton*>(this)->mHeader->theme();
-    theme->getUtf8Bounds("sans", mHeader->fontSize(), mLabel.c_str(), &w, &h);
+    theme->getUtf8Bounds("sans", mHeader->fontSize(), mLabel, &w, &h);
    
     int buttonWidth = w + 2 * mHeader->theme()->mTabButtonHorizontalPadding;
     int buttonHeight = h + 2 * mHeader->theme()->mTabButtonVerticalPadding;
-    return Vector2i(buttonWidth, buttonHeight);
+    return Vector2f(buttonWidth, buttonHeight);
 }
 
 void TabHeader::TabButton::calculateVisibleString(SDL_Renderer *renderer) 
 {
     // The size must have been set in by the enclosing tab header.
-    std::string displayedText =  mHeader->theme()->breakText(renderer, mLabel.c_str(), 
+    std::string displayedText =  mHeader->theme()->breakText(renderer, mLabel, 
                                                              "sans", mHeader->fontSize(), mSize.x-10);
 
     mVisibleText.first = mLabel.c_str();
@@ -68,16 +64,16 @@ void TabHeader::TabButton::calculateVisibleString(SDL_Renderer *renderer)
     }
 }
 
-void TabHeader::TabButton::drawAtPosition(SDL_Renderer *renderer, const Vector2i& position, bool active)
+void TabHeader::TabButton::drawAtPosition(SDL_Renderer *renderer, const Vector2f& position, bool active)
 {
-    int xPos = position.x;
-    int yPos = position.y;
-    int width = mSize.x;
-    int height = mSize.y;
+    auto xPos = position.x;
+    auto yPos = position.y;
+    auto width = mSize.x;
+    auto height = mSize.y;
     auto theme = mHeader->theme();
 
-    int lx = mHeader->getAbsoluteLeft();
-    int ly = mHeader->getAbsoluteTop();
+    auto lx = mHeader->getAbsoluteLeft();
+    auto ly = mHeader->getAbsoluteTop();
 
     //nvgSave(ctx);
     //nvgIntersectScissor(ctx, xPos, yPos, width+1, height);
@@ -89,7 +85,7 @@ void TabHeader::TabButton::drawAtPosition(SDL_Renderer *renderer, const Vector2i
 
         // Draw the background.
         //nvgBeginPath(ctx);
-        SDL_Rect trect{ lx + xPos + 1, ly + yPos + 1, width - 1, height - 1 };
+        SDL_FRect trect{ lx + xPos + 1, ly + yPos + 1, width - 1, height - 1 };
         SDL_Color b = gradTop.toSdlColor();
         SDL_Color bt = gradBot.toSdlColor();
 
@@ -100,30 +96,30 @@ void TabHeader::TabButton::drawAtPosition(SDL_Renderer *renderer, const Vector2i
     if (active) 
     {
       SDL_Color bl = theme->mBorderLight.toSdlColor();
-      SDL_Rect blr{ lx + xPos + 1, ly + yPos + 2, width, height };
+      SDL_FRect blr{ lx + xPos + 1, ly + yPos + 2, width, height };
 
       SDL_SetRenderDrawColor(renderer, bl.r, bl.g, bl.b, bl.a);
-      SDL_RenderDrawLine(renderer, blr.x, blr.y, blr.x, blr.y + blr.h);
-      SDL_RenderDrawLine(renderer, blr.x, blr.y, blr.x + blr.w, blr.y);
-      SDL_RenderDrawLine(renderer, blr.x+blr.w, blr.y, blr.x + blr.w, blr.y + blr.h);
+      SDL_RenderLine(renderer, blr.x, blr.y, blr.x, blr.y + blr.h);
+      SDL_RenderLine(renderer, blr.x, blr.y, blr.x + blr.w, blr.y);
+      SDL_RenderLine(renderer, blr.x+blr.w, blr.y, blr.x + blr.w, blr.y + blr.h);
 
       SDL_Color bd = theme->mBorderDark.toSdlColor();
-      SDL_Rect bdr{ lx + xPos + 1, ly + yPos + 1, width, height };
+      SDL_FRect bdr{ lx + xPos + 1, ly + yPos + 1, width, height };
       
       SDL_SetRenderDrawColor(renderer, bd.r, bd.g, bd.b, bd.a);
-      SDL_RenderDrawLine(renderer, bdr.x, bdr.y, bdr.x, bdr.y + bdr.h);
-      SDL_RenderDrawLine(renderer, bdr.x, bdr.y, bdr.x + bdr.w, bdr.y);
-      SDL_RenderDrawLine(renderer, bdr.x + bdr.w, bdr.y, bdr.x + bdr.w, bdr.y + bdr.h);
+      SDL_RenderLine(renderer, bdr.x, bdr.y, bdr.x, bdr.y + bdr.h);
+      SDL_RenderLine(renderer, bdr.x, bdr.y, bdr.x + bdr.w, bdr.y);
+      SDL_RenderLine(renderer, bdr.x + bdr.w, bdr.y, bdr.x + bdr.w, bdr.y + bdr.h);
     }
     else 
     {
       SDL_Color bd = theme->mBorderDark.toSdlColor();
-      SDL_Rect bdr{ lx + xPos + 1, ly + yPos + 2, width, height - 1 };
+      SDL_FRect bdr{ lx + xPos + 1, ly + yPos + 2, width, height - 1 };
 
       SDL_SetRenderDrawColor(renderer, bd.r, bd.g, bd.b, bd.a);
-      SDL_RenderDrawLine(renderer, bdr.x, bdr.y, bdr.x, bdr.y + bdr.h);
-      SDL_RenderDrawLine(renderer, bdr.x, bdr.y, bdr.x + bdr.w, bdr.y);
-      SDL_RenderDrawLine(renderer, bdr.x + bdr.w, bdr.y, bdr.x + bdr.w, bdr.y + bdr.h);
+      SDL_RenderLine(renderer, bdr.x, bdr.y, bdr.x, bdr.y + bdr.h);
+      SDL_RenderLine(renderer, bdr.x, bdr.y, bdr.x + bdr.w, bdr.y);
+      SDL_RenderLine(renderer, bdr.x + bdr.w, bdr.y, bdr.x + bdr.w, bdr.y + bdr.h);
     }
 
     // Draw the text with some padding
@@ -141,11 +137,11 @@ void TabHeader::TabButton::drawAtPosition(SDL_Renderer *renderer, const Vector2i
       int textX = mHeader->getAbsoluteLeft() + xPos + mHeader->theme()->mTabButtonHorizontalPadding;
       int textY = mHeader->getAbsoluteTop() + yPos  + mHeader->theme()->mTabButtonVerticalPadding + (active ? 1 : -2);
 
-      SDL_RenderCopy(renderer, _labelTex, Vector2i(textX, textY));
+      SDL_RenderTexture(renderer, _labelTex, Vector2f(textX, textY));
     }    
 }
 
-void TabHeader::TabButton::drawActiveBorderAt(SDL_Renderer *renderer, const Vector2i &position,
+void TabHeader::TabButton::drawActiveBorderAt(SDL_Renderer *renderer, const Vector2f &position,
                                               float offset, const Color &color) 
 {
     int xPos = position.x;
@@ -155,12 +151,12 @@ void TabHeader::TabButton::drawActiveBorderAt(SDL_Renderer *renderer, const Vect
 
     SDL_Color c = color.toSdlColor();
     SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
-    SDL_RenderDrawLine(renderer, xPos + offset, yPos + height + offset, xPos + offset, yPos + offset);
-    SDL_RenderDrawLine(renderer, xPos + offset, yPos + offset, xPos + width - offset, yPos + offset);
-    SDL_RenderDrawLine(renderer, xPos + width - offset, yPos + offset, xPos + width - offset, yPos + height + offset);
+    SDL_RenderLine(renderer, xPos + offset, yPos + height + offset, xPos + offset, yPos + offset);
+    SDL_RenderLine(renderer, xPos + offset, yPos + offset, xPos + width - offset, yPos + offset);
+    SDL_RenderLine(renderer, xPos + width - offset, yPos + offset, xPos + width - offset, yPos + height + offset);
 }
 
-void TabHeader::TabButton::drawInactiveBorderAt(SDL_Renderer *renderer, const Vector2i &position,
+void TabHeader::TabButton::drawInactiveBorderAt(SDL_Renderer *renderer, const Vector2f &position,
                                                 float offset, const Color& color) 
 {
     int xPos = position.x;
@@ -170,13 +166,13 @@ void TabHeader::TabButton::drawInactiveBorderAt(SDL_Renderer *renderer, const Ve
 
     SDL_Color c = color.toSdlColor();
     SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
-    SDL_Rect r{
-        (int)std::round(xPos + offset),
-        (int)std::round(yPos + offset),
-        (int)std::round(width - offset),
-        (int)std::round(height - offset)
+    SDL_FRect r{
+        std::round(xPos + offset),
+        std::round(yPos + offset),
+        std::round(width - offset),
+        std::round(height - offset)
     };
-    SDL_RenderDrawRect(renderer, &r);
+    SDL_RenderRect(renderer, &r);
 }
 
 
@@ -314,21 +310,21 @@ void TabHeader::ensureTabVisible(int index)
     mVisibleEnd = std::distance(mTabButtons.begin(), last);
 }
 
-std::pair<Vector2i, Vector2i> TabHeader::visibleButtonArea() const
+std::pair<Vector2f, Vector2f> TabHeader::visibleButtonArea() const
 {
     if (mVisibleStart == mVisibleEnd)
       return{ {0,0}, {0,0} };
-    auto topLeft = _pos + Vector2i(theme()->mTabControlWidth, 0);
+    auto topLeft = _pos + Vector2f(theme()->mTabControlWidth, 0);
     auto width = std::accumulate(visibleBegin(), visibleEnd(), theme()->mTabControlWidth,
                                  [](int acc, const TabButton& tb) 
     {
         return acc + tb.size().x;
     });
-    auto bottomRight = _pos + Vector2i{ width, mSize.y };
+    auto bottomRight = _pos + Vector2f{ width, mSize.y };
     return { topLeft, bottomRight };
 }
 
-std::pair<Vector2i, Vector2i> TabHeader::activeButtonArea() const
+std::pair<Vector2f, Vector2f> TabHeader::activeButtonArea() const
 {
     if (mVisibleStart == mVisibleEnd || mActiveTab < mVisibleStart || mActiveTab >= mVisibleEnd)
       return{ {0,0}, {0,0} };
@@ -338,8 +334,8 @@ std::pair<Vector2i, Vector2i> TabHeader::activeButtonArea() const
     {
         return acc + tb.size().x;
     });
-    auto topLeft = _pos + Vector2i{ width, 0 };
-    auto bottomRight = _pos + Vector2i{ width + activeIterator()->size().x, mSize.y };
+    auto topLeft = _pos + Vector2f{ width, 0 };
+    auto bottomRight = _pos + Vector2f{ width + activeIterator()->size().x, mSize.y };
     return { topLeft, bottomRight };
 }
 
@@ -347,7 +343,7 @@ void TabHeader::performLayout(SDL_Renderer* ctx)
 {
     Widget::performLayout(ctx);
 
-    Vector2i currentPosition(0, 0);
+    Vector2f currentPosition(0, 0);
     // Place the tab buttons relative to the beginning of the tab header.
     for (auto& tab : mTabButtons) 
     {
@@ -365,13 +361,13 @@ void TabHeader::performLayout(SDL_Renderer* ctx)
         mOverflowing = true;
 }
 
-Vector2i TabHeader::preferredSize(SDL_Renderer* ctx) const 
+Vector2f TabHeader::preferredSize(SDL_Renderer* ctx) const 
 {
     // Set up the nvg context for measuring the text inside the tab buttons.
     //nvgFontFace(ctx, mFont.c_str());
     //nvgFontSize(ctx, fontSize());
     //nvgTextAlign(ctx, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-  Vector2i size = Vector2i(2*theme()->mTabControlWidth, 0);
+  Vector2f size = Vector2f(2*theme()->mTabControlWidth, 0);
     for (auto& tab : mTabButtons) 
     {
         auto tabPreferred = tab.preferredSize(ctx);
@@ -385,7 +381,7 @@ Vector2i TabHeader::preferredSize(SDL_Renderer* ctx) const
     return size;
 }
 
-bool TabHeader::mouseButtonEvent(const Vector2i &p, int button, bool down, int modifiers)
+bool TabHeader::mouseButtonEvent(const Vector2f &p, int button, bool down, int modifiers)
 {
     Widget::mouseButtonEvent(p, button, down, modifiers);
     if (button == SDL_BUTTON_LEFT && down) 
@@ -432,11 +428,11 @@ void TabHeader::draw(SDL_Renderer* renderer)
     auto current = visibleBegin();
     auto last = visibleEnd();
     auto active = std::next(mTabButtons.begin(), mActiveTab);
-    Vector2i currentPosition = _pos + Vector2i(theme()->mTabControlWidth, 0);
+    Vector2f currentPosition = _pos + Vector2f(theme()->mTabControlWidth, 0);
 
     // Flag to draw the active tab last. Looks a little bit better.
     bool drawActive = false;
-    Vector2i activePosition{ 0, 0 };
+    Vector2f activePosition{ 0, 0 };
 
     // Draw inactive visible buttons.
     for (; current != last; ++current)
@@ -509,7 +505,7 @@ void TabHeader::drawControls(SDL_Renderer *renderer)
     {
       Vector2f leftIconPos = absolutePosition().tofloat();
       leftIconPos += _pos.tofloat() + Vector2f{ xScaleLeft*theme()->mTabControlWidth, yScaleLeft*mSize.y };
-      SDL_RenderCopy(renderer, _leftIcon, Vector2i(leftIconPos.x - _leftIcon.w() / 2, leftIconPos.y - _leftIcon.h() / 2));
+      SDL_RenderTexture(renderer, _leftIcon, Vector2f(leftIconPos.x - _leftIcon.w() / 2, leftIconPos.y - _leftIcon.h() / 2));
     }
 
     // Draw the arrow.
@@ -520,17 +516,17 @@ void TabHeader::drawControls(SDL_Renderer *renderer)
       Vector2f leftControlsPos = absolutePosition().tofloat();
       leftControlsPos += _pos.tofloat() + Vector2f( mSize.x - theme()->mTabControlWidth, 0 );
       Vector2f rightIconPos = leftControlsPos + Vector2f(xScaleRight*theme()->mTabControlWidth, yScaleRight*mSize.tofloat().y);
-      SDL_RenderCopy(renderer, _rightIcon, Vector2i(rightIconPos.x - _rightIcon.w() / 2, rightIconPos.y - _rightIcon.h() / 2 + 1));
+      SDL_RenderTexture(renderer, _rightIcon, Vector2f(rightIconPos.x - _rightIcon.w() / 2, rightIconPos.y - _rightIcon.h() / 2 + 1));
     }
 }
 
-TabHeader::ClickLocation TabHeader::locateClick(const Vector2i& p)
+TabHeader::ClickLocation TabHeader::locateClick(const Vector2f& p)
 {
-  Vector2i leftDistance = p - _pos;
+  Vector2f leftDistance = p - _pos;
   bool hitLeft = leftDistance.positive() && leftDistance.lessOrEq({ theme()->mTabControlWidth, mSize.y });
   if (hitLeft)
     return ClickLocation::LeftControls;
-  auto rightDistance = p - (_pos + Vector2i{ mSize.x - theme()->mTabControlWidth, 0 });
+  auto rightDistance = p - (_pos + Vector2f{ mSize.x - theme()->mTabControlWidth, 0 });
   bool hitRight = rightDistance.positive() && rightDistance.lessOrEq({theme()->mTabControlWidth, mSize.y});
     if (hitRight)
         return ClickLocation::RightControls;

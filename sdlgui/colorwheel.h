@@ -30,10 +30,10 @@ public:
     /// Set the current color
     void setColor(const Color& color);
 
-    Vector2i preferredSize(SDL_Renderer *ctx) const override;
+    Vector2f preferredSize(SDL_Renderer *ctx) const override;
     void draw(SDL_Renderer *renderer) override;
-    bool mouseButtonEvent(const Vector2i &p, int button, bool down, int modifiers);
-    bool mouseDragEvent(const Vector2i &p, const Vector2i &rel, int button, int modifiers);
+    bool mouseButtonEvent(const Vector2f &p, int button, bool down, int modifiers);
+    bool mouseDragEvent(const Vector2f &p, const Vector2f &rel, int button, int modifiers);
 
 private:
     enum Region {
@@ -44,7 +44,7 @@ private:
     };
 
     Color hue2rgb(float h) const;
-    Region adjustPosition(const Vector2i &p, Region consideredRegions = Both);
+    Region adjustPosition(const Vector2f &p, Region consideredRegions = Both);
 
 protected:
     float mHue;

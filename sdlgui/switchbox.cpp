@@ -32,11 +32,11 @@ struct SwitchBox::AsyncTexture
     SwitchBox* sb = ptr;
     AsyncTexture* self = this;
     std::thread tgr([=]() {
-      Theme* theme = sb->theme();
+      auto theme = sb->theme();
 
-      int ww = sb->width();
-      int hh = sb->height();
-      NVGcontext *ctx = nvgCreateRT(NVG_DEBUG, ww, hh, 0);
+      auto ww = sb->width();
+      auto hh = sb->height();
+      auto ctx = nvgCreateRT(NVG_DEBUG, ww, hh, 0);
 
       float pxRatio = 1.0f;
       nvgBeginFrame(ctx, ww, hh, pxRatio);
@@ -96,15 +96,15 @@ struct SwitchBox::AsyncTexture
     SwitchBox* sb = ptr;
     AsyncTexture* self = this;
     std::thread tgr([=]() {
-      Theme* theme = sb->theme();
+      auto theme = sb->theme();
 
-      int ww = std::min(sb->width(), sb->height());
-      int hh = ww;
+      auto ww = std::min(sb->width(), sb->height());
+      auto hh = ww;
 
       Vector2f center(ww/2, hh/2);
-      float kr = hh * 0.4f; 
+      auto kr = hh * 0.4f; 
 
-      NVGcontext *ctx = nvgCreateRT(NVG_DEBUG, ww, ww, 0);
+      auto ctx = nvgCreateRT(NVG_DEBUG, ww, ww, 0);
 
       float pxRatio = 1.0f;
       nvgBeginFrame(ctx, ww, ww, pxRatio);
@@ -164,20 +164,20 @@ SwitchBox::SwitchBox(Widget *parent, Alignment align, const std::string &caption
 {
 }
 
-Vector2i SwitchBox::preferredSize(SDL_Renderer *renderer) const 
+Vector2f SwitchBox::preferredSize(SDL_Renderer *renderer) const 
 {
-    if (mFixedSize != Vector2i::Zero())
+    if (mFixedSize != Vector2f::Zero())
         return mFixedSize;
 
     int w, h;
-    const_cast<SwitchBox*>(this)->theme()->getUtf8Bounds("sans", fontSize(), mCaption.c_str(), &w, &h);
+    const_cast<SwitchBox*>(this)->theme()->getUtf8Bounds("sans", fontSize(), mCaption, &w, &h);
     int knobW = 1.8f * fontSize();
     knobW = std::max<int>(knobW / 32, 1) * 32;
 
     if (mAlign == Alignment::Horizontal)
-      return Vector2i(w + knobW, knobW);
+      return Vector2f(w + knobW, knobW);
     else
-      return Vector2i(w + knobW, 2 * knobW);
+      return Vector2f(w + knobW, 2 * knobW);
 }
 
 void SwitchBox::drawBody(SDL_Renderer *renderer)
@@ -187,9 +187,9 @@ void SwitchBox::drawBody(SDL_Renderer *renderer)
 
   if (atx != _txs.end())
   {
-    Vector2i ap = absolutePosition();
+    Vector2f ap = absolutePosition();
     (*atx)->perform(renderer);
-    SDL_RenderCopy(renderer, (*atx)->tex, ap);
+    SDL_RenderTexture(renderer, (*atx)->tex, ap);
   }
   else
   {
@@ -204,9 +204,9 @@ void SwitchBox::drawKnob(SDL_Renderer *renderer)
   int id = (0x200) + (mEnabled ? 1 : 0);
   auto atx = std::find_if(_txs.begin(), _txs.end(), [id](AsyncTexturePtr p) { return p->id == id; });
  
-  Vector2i ap = absolutePosition();
+  Vector2f ap = absolutePosition();
   Vector2f center = ap.As<float>() + mSize.As<float>() * 0.5f;
-  Vector2i knobPos;
+  Vector2f knobPos;
   float kr, startX, startY, widthX, heightY, hh;
   hh = height();
   if (mAlign == Alignment::Horizontal)
@@ -218,7 +218,7 @@ void SwitchBox::drawKnob(SDL_Renderer *renderer)
     startY = (ap.y + (hh - heightY) / 2) + 1;
     widthX = (hh * 1.5);
 
-    knobPos = Vector2i(startX + kr + path * (widthX - 2 * kr), center.y + 0.5f);
+    knobPos = Vector2f(startX + kr + path * (widthX - 2 * kr), center.y + 0.5f);
   }
   else
   {
@@ -229,13 +229,13 @@ void SwitchBox::drawKnob(SDL_Renderer *renderer)
     startY = (ap.y + (hh - heightY) / 2);
     widthX = (hh * 0.4f);
 
-    knobPos = Vector2i(startX + kr, startY + path * (heightY - 2 * kr) + kr);
+    knobPos = Vector2f(startX + kr, startY + path * (heightY - 2 * kr) + kr);
   }
 
   if (atx != _txs.end())
   {
     (*atx)->perform(renderer);
-    SDL_RenderCopy(renderer, (*atx)->tex, knobPos - Vector2i((*atx)->tex.w()/2, (*atx)->tex.h() / 2));
+    SDL_RenderTexture(renderer, (*atx)->tex, knobPos - Vector2f((*atx)->tex.w()/2, (*atx)->tex.h() / 2));
   }
   else
   {
@@ -265,7 +265,7 @@ void SwitchBox::draw(SDL_Renderer *renderer)
   nvgFontFace(ctx, "sans");
   nvgFillColor(ctx, mEnabled ? mTheme->mTextColor : mTheme->mDisabledTextColor);
   nvgTextAlign(ctx, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-  nvgText(ctx, mPos.x() + 1.6f * fontSize(), mPos.y() + mSize.y() * 0.5f, mCaption.c_str(), nullptr);
+  nvgText(ctx, mPos.x() + 1.6f * fontSize(), mPos.y() + mSize.y() * 0.5f, mCaption, nullptr);
 */
   Widget::draw(renderer);
 }

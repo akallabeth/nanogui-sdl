@@ -22,7 +22,7 @@ public:
         : Button(parent, caption, icon)
     {
         setFlags(Flags::RadioButton | Flags::ToggleButton);
-        setFixedSize(Vector2i(25, 25));
+        setFixedSize(Vector2f(25, 25));
     }
 };
 

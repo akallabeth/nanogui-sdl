@@ -73,14 +73,14 @@ public:
     std::function<bool(const std::string& str)> callback() const { return mCallback; }
     void setCallback(const std::function<bool(const std::string& str)> &callback) { mCallback = callback; }
 
-    bool mouseButtonEvent(const Vector2i &p, int button, bool down, int modifiers) override;
-    bool mouseMotionEvent(const Vector2i &p, const Vector2i &rel, int button, int modifiers) override;
-    bool mouseDragEvent(const Vector2i &p, const Vector2i &rel, int button, int modifiers) override;
+    bool mouseButtonEvent(const Vector2f &p, int button, bool down, int modifiers) override;
+    bool mouseMotionEvent(const Vector2f &p, const Vector2f &rel, int button, int modifiers) override;
+    bool mouseDragEvent(const Vector2f &p, const Vector2f &rel, int button, int modifiers) override;
     bool focusEvent(bool focused) override;
-    bool keyboardEvent(int key, int scancode, int action, int modifiers) override;
+    bool keyboardEvent(int key, int scancode, bool action, uint16_t modifiers) override;
     bool keyboardCharacterEvent(unsigned int codepoint) override;
 
-    Vector2i preferredSize(SDL_Renderer *ctx) const override;
+    Vector2f preferredSize(SDL_Renderer *ctx) const override;
     void draw(SDL_Renderer* renderer) override;
     void drawBody(SDL_Renderer* renderer);
 protected:
@@ -95,7 +95,7 @@ protected:
 
     /// The location (if any) for the spin area.
     enum class SpinArea { None, Top, Bottom };
-    SpinArea spinArea(const Vector2i & pos);
+    SpinArea spinArea(const Vector2f & pos);
 
 protected:
     bool mEditable;
@@ -112,9 +112,9 @@ protected:
     std::string mValueTemp;
     int mCursorPos;
     int mSelectionPos;
-    Vector2i mMousePos;
-    Vector2i mMouseDownPos;
-    Vector2i mMouseDragPos;
+    Vector2f mMousePos;
+    Vector2f mMouseDownPos;
+    Vector2f mMouseDragPos;
     int mMouseDownModifier;
     float mTextOffset;
     double mLastClick;
@@ -193,7 +193,7 @@ public:
         setMaxValue(maxValue);
     }
 
-    virtual bool mouseButtonEvent(const Vector2i &p, int button, bool down, int modifiers) override {
+    virtual bool mouseButtonEvent(const Vector2f &p, int button, bool down, int modifiers) override {
         if ((mEditable || mSpinnable) && down)
             mMouseDownValue = value();
 
@@ -213,7 +213,7 @@ public:
 
         return TextBox::mouseButtonEvent(p, button, down, modifiers);
     }
-    virtual bool mouseDragEvent(const Vector2i &p, const Vector2i &rel, int button, int modifiers) override {
+    virtual bool mouseDragEvent(const Vector2f &p, const Vector2f &rel, int button, int modifiers) override {
         if (TextBox::mouseDragEvent(p, rel, button, modifiers)) {
             return true;
         }
@@ -226,7 +226,7 @@ public:
         }
         return false;
     }
-    virtual bool scrollEvent(const Vector2i &p, const Vector2f &rel) override {
+    virtual bool scrollEvent(const Vector2f &p, const Vector2f &rel) override {
         if (Widget::scrollEvent(p, rel)) {
             return true;
         }
@@ -304,7 +304,7 @@ public:
         setMaxValue(maxValue);
     }
 
-    virtual bool mouseButtonEvent(const Vector2i &p, int button, bool down, int modifiers) override 
+    virtual bool mouseButtonEvent(const Vector2f &p, int button, bool down, int modifiers) override 
     {
         if ((mEditable || mSpinnable) && down)
             mMouseDownValue = value();
@@ -330,7 +330,7 @@ public:
         return TextBox::mouseButtonEvent(p, button, down, modifiers);
     }
 
-    virtual bool mouseDragEvent(const Vector2i &p, const Vector2i &rel, int button, int modifiers) override
+    virtual bool mouseDragEvent(const Vector2f &p, const Vector2f &rel, int button, int modifiers) override
     {
         if (TextBox::mouseDragEvent(p, rel, button, modifiers)) 
         {
@@ -345,7 +345,7 @@ public:
         }
         return false;
     }
-    virtual bool scrollEvent(const Vector2i &p, const Vector2f &rel) override 
+    virtual bool scrollEvent(const Vector2f &p, const Vector2f &rel) override 
     {
         if (Widget::scrollEvent(p, rel))
         {

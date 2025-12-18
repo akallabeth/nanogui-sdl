@@ -23,13 +23,13 @@ PopupButton::PopupButton(Widget *parent, const std::string &caption,
 
     Window *parentWindow = window();
     mPopup = new Popup(parentWindow->parent(), window());
-    mPopup->setSize(Vector2i(320, 250));
+    mPopup->setSize(Vector2f(320, 250));
     mPopup->setVisible(false);
 }
 
-Vector2i PopupButton::preferredSize(SDL_Renderer *ctx) const
+Vector2f PopupButton::preferredSize(SDL_Renderer *ctx) const
 {
-    return Button::preferredSize(ctx) + Vector2i(15, 0);
+    return Button::preferredSize(ctx) + Vector2f(15, 0);
 }
 
 void PopupButton::draw(SDL_Renderer* renderer)
@@ -52,8 +52,8 @@ void PopupButton::draw(SDL_Renderer* renderer)
       mTheme->getTexAndRectUtf8(renderer, _chevronTex, 0, 0, icon.data(), "icons", fntsize, textColor);
     }
 
-    Vector2i ap = absolutePosition();
-    SDL_RenderCopy(renderer, _chevronTex, ap + Vector2i(mSize.x - _chevronTex.w() - 8, mSize.y * 0.5f - 1) );
+    Vector2f ap = absolutePosition();
+    SDL_RenderTexture(renderer, _chevronTex, ap + Vector2f(mSize.x - _chevronTex.w() - 8, mSize.y * 0.5f - 1) );
   }
 }
 
@@ -63,7 +63,7 @@ void PopupButton::performLayout(SDL_Renderer *ctx)
 
     const Window *parentWindow = window();
 
-    mPopup->setAnchorPos(Vector2i(parentWindow->width() + 15,
+    mPopup->setAnchorPos(Vector2f(parentWindow->width() + 15,
                          absolutePosition().y - parentWindow->position().y + mSize.y /2));
 }
 

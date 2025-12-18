@@ -30,13 +30,13 @@ struct Graph::AsyncTexture
     AsyncTexture* self = this;
 
     std::thread tgr([=]() {
-      Theme* theme = graph->theme();
+      auto theme = graph->theme();
 
-      int ww = graph->width();
-      int hh = graph->height();
-      NVGcontext *ctx = nvgCreateRT(NVG_DEBUG, ww, hh, 0);
+      auto ww = graph->width();
+      auto hh = graph->height();
+      auto ctx = nvgCreateRT(NVG_DEBUG, ww, hh, 0);
 
-      float pxRatio = 1.0f;
+      auto pxRatio = 1.0f;
       nvgBeginFrame(ctx, ww, hh, pxRatio);
 
       nvgBeginPath(ctx);
@@ -104,22 +104,22 @@ Graph::Graph(Widget *parent, const std::string &caption)
     _headerTex.dirty = true;
 }
 
-Vector2i Graph::preferredSize(SDL_Renderer *) const
+Vector2f Graph::preferredSize(SDL_Renderer *) const
 {
-    return Vector2i(180, 45);
+    return Vector2f(180, 45);
 }
 
 void Graph::draw(SDL_Renderer *renderer) 
 {
     Widget::draw(renderer);
 
-    Vector2i ap = absolutePosition();
+    Vector2f ap = absolutePosition();
     
     if (_atx)
     {
-      Vector2i ap = absolutePosition();
+      Vector2f ap = absolutePosition();
       _atx->perform(renderer);
-      SDL_RenderCopy(renderer, _atx->tex, ap);
+      SDL_RenderTexture(renderer, _atx->tex, ap);
     }
     else
     {
@@ -128,17 +128,17 @@ void Graph::draw(SDL_Renderer *renderer)
     }
 
     if (_captionTex.dirty)
-      mTheme->getTexAndRectUtf8(renderer, _captionTex, 0, 0, mCaption.c_str(), "sans", 14, mTextColor);
+      mTheme->getTexAndRectUtf8(renderer, _captionTex, 0, 0, mCaption, "sans", 14, mTextColor);
 
     if (_headerTex.dirty)
-      mTheme->getTexAndRectUtf8(renderer, _headerTex, 0, 0, mHeader.c_str(), "sans", 18, mTextColor);
+      mTheme->getTexAndRectUtf8(renderer, _headerTex, 0, 0, mHeader, "sans", 18, mTextColor);
 
     if (_footerTex.dirty)
-      mTheme->getTexAndRectUtf8(renderer, _footerTex, 0, 0, mFooter.c_str(), "sans", 15, mTextColor);
+      mTheme->getTexAndRectUtf8(renderer, _footerTex, 0, 0, mFooter, "sans", 15, mTextColor);
 
-    SDL_RenderCopy(renderer, _captionTex, ap + Vector2i(3,1) );
-    SDL_RenderCopy(renderer, _headerTex, ap + Vector2i(mSize.x - 3 - _headerTex.w(), 1));
-    SDL_RenderCopy(renderer, _footerTex, ap + Vector2i(mSize.x - 3 - _footerTex.w(), mSize.y - 1 - _footerTex.h()));
+    SDL_RenderTexture(renderer, _captionTex, ap + Vector2f(3,1) );
+    SDL_RenderTexture(renderer, _headerTex, ap + Vector2f(mSize.x - 3 - _headerTex.w(), 1));
+    SDL_RenderTexture(renderer, _footerTex, ap + Vector2f(mSize.x - 3 - _footerTex.w(), mSize.y - 1 - _footerTex.h()));
  }
 
 NAMESPACE_END(sdlgui)

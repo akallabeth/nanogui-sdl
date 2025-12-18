@@ -18,21 +18,21 @@
 
 struct SDL_Renderer;
 struct SDL_Texture;
-struct SDL_Rect;
+struct SDL_FRect;
 
 NAMESPACE_BEGIN(sdlgui)
 
 struct Texture
 {
   SDL_Texture* tex = nullptr;
-  SDL_Rect rrect;
+  SDL_FRect rrect;
   bool dirty = false;
 
   inline int w() const { return rrect.w; }
   inline int h() const { return rrect.h; }
 };
 
-void SDL_RenderCopy(SDL_Renderer* renderer, Texture& tex, const Vector2i& pos);
+void SDL_RenderTexture(SDL_Renderer* renderer, Texture& tex, const Vector2f& pos);
 /**
  * \class Theme theme.h sdlgui/theme.h
  *
@@ -48,17 +48,17 @@ public:
     int mStandardFontSize;
     int mButtonFontSize;
     int mTextBoxFontSize;
-    int mWindowCornerRadius;
-    int mWindowHeaderHeight;
-    int mWindowDropShadowSize;
-    int mButtonCornerRadius;
+    float mWindowCornerRadius;
+    float mWindowHeaderHeight;
+    float mWindowDropShadowSize;
+    float mButtonCornerRadius;
     float mTabBorderWidth;
-    int mTabInnerMargin;
-    int mTabMinButtonWidth;
-    int mTabMaxButtonWidth;
-    int mTabControlWidth;
-    int mTabButtonHorizontalPadding;
-    int mTabButtonVerticalPadding;
+    float mTabInnerMargin;
+    float mTabMinButtonWidth;
+    float mTabMaxButtonWidth;
+    float mTabControlWidth;
+    float mTabButtonHorizontalPadding;
+    float mTabButtonVerticalPadding;
 
     std::mutex loadMutex;
 
@@ -99,25 +99,22 @@ public:
     Color mWindowPopup;
     Color mWindowPopupTransparent;
 
-    void getTexAndRect(SDL_Renderer *renderer, int x, int y, const char *text,
-      const char* fontname, size_t ptsize, SDL_Texture **texture, SDL_Rect *rect, SDL_Color *textColor);
+    void getTexAndRect(SDL_Renderer *renderer, int x, int y, const std::string& text,
+      const std::string& fontname, size_t ptsize, SDL_Texture **texture, SDL_FRect *rect, SDL_Color *textColor);
 
-    void getTexAndRectUtf8(SDL_Renderer *renderer, int x, int y, const char *text,
-      const char* fontname, size_t ptsize, SDL_Texture **texture, SDL_Rect *rect, SDL_Color *textColor);
+    void getTexAndRectUtf8(SDL_Renderer *renderer, int x, int y, const std::string& text,
+      const std::string& fontname, size_t ptsize, SDL_Texture **texture, SDL_FRect *rect, SDL_Color *textColor);
 
-    std::string breakText(SDL_Renderer* renderer, const char* string, const char* fontname, int ptsize,
+    std::string breakText(SDL_Renderer* renderer, const std::string& string, const std::string& fontname, int ptsize,
                        float breakRowWidth);
 
-    int getTextWidth(const char* fontname, size_t ptsize, const char* text);
-    int getUtf8Width(const char* fontname, size_t ptsize, const char* text);
-    int getTextBounds(const char* fontname, size_t ptsize, const char* text, int *w, int *h);
-    int getUtf8Bounds(const char* fontname, size_t ptsize, const char* text, int *w, int *h);
+    int getTextWidth(const std::string& fontname, size_t ptsize, const std::string& text);
+    int getUtf8Width(const std::string& fontname, size_t ptsize, const std::string& text);
+    int getTextBounds(const std::string& fontname, size_t ptsize, const std::string& text, int *w, int *h);
+    int getUtf8Bounds(const std::string& fontname, size_t ptsize, const std::string& text, int *w, int *h);
 
-    void getTexAndRectUtf8(SDL_Renderer *renderer, Texture& tx, int x, int y, const char *text,
-                           const char* fontname, size_t ptsize, const Color& textColor);
-
-protected:
-    virtual ~Theme() { };
+    void getTexAndRectUtf8(SDL_Renderer *renderer, Texture& tx, int x, int y, const std::string& text,
+                           const std::string& fontname, size_t ptsize, const Color& textColor);
 };
 
 NAMESPACE_END(sdlgui)

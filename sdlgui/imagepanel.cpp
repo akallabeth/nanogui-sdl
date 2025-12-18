@@ -20,35 +20,35 @@ ImagePanel::ImagePanel(Widget *parent)
 {
 }
 
-Vector2i ImagePanel::gridSize() const
+Vector2f ImagePanel::gridSize() const
 {
     int nCols = 1 + std::max(0,
         (int) ((mSize.x - 2 * mMargin - mThumbSize) /
         (float) (mThumbSize + mSpacing)));
     int nRows = ((int) mImages.size() + nCols - 1) / nCols;
-    return Vector2i(nCols, nRows);
+    return Vector2f(nCols, nRows);
 }
 
-int ImagePanel::indexForPosition(const Vector2i &p) const
+int ImagePanel::indexForPosition(const Vector2f &p) const
 {
   Vector2f pp = (p.tofloat() - Vector2f(mMargin, mMargin)) / (float)(mThumbSize + mSpacing);
     float iconRegion = mThumbSize / (float)(mThumbSize + mSpacing);
     bool overImage = pp.x - std::floor(pp.x) < iconRegion &&
                     pp.y - std::floor(pp.y) < iconRegion;
-    Vector2i gridPos = pp.toint();
-    Vector2i grid = gridSize();
+    Vector2f gridPos = pp;
+    Vector2f grid = gridSize();
     overImage &= gridPos.positive() && gridPos.lessOrEq(grid);
     return overImage ? (gridPos.x + gridPos.y * grid.x) : -1;
 }
 
-bool ImagePanel::mouseMotionEvent(const Vector2i &p, const Vector2i & /* rel */,
+bool ImagePanel::mouseMotionEvent(const Vector2f &p, const Vector2f & /* rel */,
                               int /* button */, int /* modifiers */) 
 {
     mMouseIndex = indexForPosition(p);
     return true;
 }
 
-bool ImagePanel::mouseButtonEvent(const Vector2i &p, int /* button */, bool down,
+bool ImagePanel::mouseButtonEvent(const Vector2f &p, int /* button */, bool down,
                                   int /* modifiers */) 
 {
     int index = indexForPosition(p);
@@ -57,9 +57,9 @@ bool ImagePanel::mouseButtonEvent(const Vector2i &p, int /* button */, bool down
     return true;
 }
 
-Vector2i ImagePanel::preferredSize(SDL_Renderer *) const
+Vector2f ImagePanel::preferredSize(SDL_Renderer *) const
 {
-  Vector2i grid = gridSize();
+  Vector2f grid = gridSize();
     return{
         grid.x * mThumbSize + (grid.x - 1) * mSpacing + 2 * mMargin,
         grid.y * mThumbSize + (grid.y - 1) * mSpacing + 2 * mMargin
@@ -68,20 +68,21 @@ Vector2i ImagePanel::preferredSize(SDL_Renderer *) const
 
 void ImagePanel::draw(SDL_Renderer* renderer) 
 {
-  Vector2i grid = gridSize();
+  Vector2f grid = gridSize();
 
     int ax = getAbsoluteLeft();
     int ay = getAbsoluteTop();
 
-    PntRect clip = getAbsoluteCliprect();
-    SDL_Rect clipRect = pntrect2srect(clip);
+    PntFRect clip = getAbsoluteCliprect();
+    SDL_FRect clipRect = PntFRect2srect(clip);
 
     for (size_t i=0; i<mImages.size(); ++i) 
     {
-      Vector2i p = Vector2i(mMargin, mMargin) + Vector2i((int) i % grid.x, (int) i / grid.x) * (mThumbSize + mSpacing);
-        p += Vector2i(ax, ay);
-        int imgw = mImages[i].w;
-        int imgh = mImages[i].h;
+        auto imod = i % static_cast<size_t>(grid.x);
+      auto p = Vector2f(mMargin, mMargin) + Vector2f(imod, i / grid.x) * (mThumbSize + mSpacing);
+        p += Vector2f(ax, ay);
+        auto imgw = mImages[i].w;
+        auto imgh = mImages[i].h;
 
         float iw, ih, ix, iy;
         if (imgw < imgh) 
@@ -102,7 +103,7 @@ void ImagePanel::draw(SDL_Renderer* renderer)
         //, 0, mImages[i].first, mMouseIndex == (int)i ? 1.0 : 0.7);
 
         SDL_Color c{ 0, 0, 0, 128 };
-        SDL_Rect shadowPaintRect{ p.x - 1, p.y, mThumbSize + 2, mThumbSize + 2 };
+        SDL_FRect shadowPaintRect{ p.x - 1, p.y, mThumbSize + 2, mThumbSize + 2 };
 
         shadowPaintRect = clip_rects(shadowPaintRect, clipRect);
 
@@ -112,14 +113,14 @@ void ImagePanel::draw(SDL_Renderer* renderer)
           SDL_RenderFillRect(renderer, &shadowPaintRect);
         }
 
-        SDL_Rect imgPaintRect{
-            (int)std::round(p.x + ix),
-            (int)std::round(p.y + iy),
-            (int)std::round(iw),
-            (int)std::round(ih)
+        SDL_FRect imgPaintRect{
+            std::round(p.x + ix),
+            std::round(p.y + iy),
+            std::round(iw),
+            std::round(ih)
         };
-        SDL_Rect imgSrcRect{ 0, 0, imgw, imgh };
-        PntRect imgrect = clip_rects(srect2pntrect(imgPaintRect), clip);
+        SDL_FRect imgSrcRect{ 0, 0, imgw, imgh };
+        PntFRect imgrect = clip_rects(srect2PntFRect(imgPaintRect), clip);
         imgPaintRect.w = imgrect.x2 - imgrect.x1;
         imgPaintRect.h = imgrect.y2 - imgrect.y1;
         if (imgPaintRect.y < clip.y1)
@@ -133,14 +134,14 @@ void ImagePanel::draw(SDL_Renderer* renderer)
           imgSrcRect.h = (imgPaintRect.h / (float)ih) * imgh;
         }
 
-        SDL_RenderCopy(renderer, mImages[i].tex, &imgSrcRect, &imgPaintRect);
+        SDL_RenderTexture(renderer, mImages[i].tex, &imgSrcRect, &imgPaintRect);
 
-        SDL_Rect brect{ p.x + 1, p.y + 1, mThumbSize - 2, mThumbSize - 2};
+        SDL_FRect brect{ p.x + 1, p.y + 1, mThumbSize - 2, mThumbSize - 2};
         brect = clip_rects(brect, clipRect);
         if (brect.w > 0 && brect.h > 0)
         {
           SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 80);
-          SDL_RenderDrawRect(renderer, &brect);
+          SDL_RenderRect(renderer, &brect);
         }
     }
 

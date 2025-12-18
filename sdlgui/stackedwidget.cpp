@@ -39,9 +39,9 @@ void StackedWidget::performLayout(SDL_Renderer *ctx) {
     }
 }
 
-Vector2i StackedWidget::preferredSize(SDL_Renderer *ctx) const 
+Vector2f StackedWidget::preferredSize(SDL_Renderer *ctx) const 
 {
-  Vector2i size{ 0, 0 };
+  Vector2f size{ 0, 0 };
     for (auto child : mChildren)
         size = size.cmax(child->preferredSize(ctx));
     return size;

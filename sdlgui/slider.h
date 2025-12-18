@@ -56,9 +56,9 @@ public:
     std::function<void(float)> finalCallback() const { return mFinalCallback; }
     void setFinalCallback(const std::function<void(float)> &callback) { mFinalCallback = callback; }
 
-    Vector2i preferredSize(SDL_Renderer *ctx) const override;
-    bool mouseDragEvent(const Vector2i &p, const Vector2i &rel, int button, int modifiers) override;
-    bool mouseButtonEvent(const Vector2i &p, int button, bool down, int modifiers) override;
+    Vector2f preferredSize(SDL_Renderer *ctx) const override;
+    bool mouseDragEvent(const Vector2f &p, const Vector2f &rel, int button, int modifiers) override;
+    bool mouseButtonEvent(const Vector2f &p, int button, bool down, int modifiers) override;
     void draw(SDL_Renderer* renderer) override;
 
     virtual void drawBody(SDL_Renderer* renderer);

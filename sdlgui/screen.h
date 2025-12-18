@@ -30,7 +30,7 @@ class  Screen : public Widget
     friend class Window;
 public:
     /// Create a new screen
-    Screen( SDL_Window* window, const Vector2i &size, const std::string &caption,
+    Screen( SDL_Window* window, const Vector2f &size, const std::string &caption,
             bool resizable = true, bool fullscreen = false);
 
     /// Release all resources
@@ -52,7 +52,7 @@ public:
     void setVisible(bool visible);
 
     /// Set window size
-    void setSize(const Vector2i& size);
+    void setSize(const Vector2f& size);
 
     /// Return the ratio between pixel and device coordinates (e.g. >= 2 on Mac Retina displays)
     float pixelRatio() const { return mPixelRatio; }
@@ -66,18 +66,18 @@ public:
     virtual bool dropEvent(const std::vector<std::string> & /* filenames */) { return false; /* To be overridden */ }
 
     /// Default keyboard event handler
-    virtual bool keyboardEvent(int key, int scancode, int action, int modifiers);
+    virtual bool keyboardEvent(int key, int scancode, bool action, uint16_t modifiers);
 
     /// Text input event handler: codepoint is native endian UTF-32 format
     virtual bool keyboardCharacterEvent(unsigned int codepoint);
 
     /// Window resize event handler
-    virtual bool resizeEvent(const Vector2i &) { return false; }
+    virtual bool resizeEvent(const Vector2f &) { return false; }
 
     virtual void drawAll();
 
     /// Return the last observed mouse position value
-    Vector2i mousePos() const { return mMousePos; }
+    Vector2f mousePos() const { return mMousePos; }
 
     /// Return a pointer to the underlying GLFW window data structure
     SDL_Window *window() { return _window; }
@@ -96,7 +96,7 @@ public:
     /* Event handlers */
     bool cursorPosCallbackEvent(double x, double y);
     bool mouseButtonCallbackEvent(int button, int action, int modifiers);
-    bool keyCallbackEvent(int key, int scancode, int action, int mods);
+    bool keyCallbackEvent(int key, int scancode, bool action, int mods);
     bool charCallbackEvent(unsigned int codepoint);
     bool dropCallbackEvent(int count, const char **filenames);
     bool scrollCallbackEvent(double x, double y);
@@ -115,13 +115,13 @@ protected:
     SDL_Window *_window;
     std::vector<Widget *> mFocusPath;
     SDL_Renderer* mSDL_Renderer;
-    Vector2i mFBSize;
+    Vector2f mFBSize;
     float mPixelRatio;
     int mMouseState, mModifiers;
-    Vector2i mMousePos;
+    Vector2f mMousePos;
     bool mDragActive;
     Widget *mDragWidget = nullptr;
-    double mLastInteraction;
+    uint64_t mLastInteraction;
     bool mProcessEvents;
     Color mBackground;
     std::string mCaption;

@@ -42,7 +42,7 @@ enum class Orientation {
 class  Layout : public Object {
 public:
     virtual void performLayout(SDL_Renderer *ctx, Widget *widget) const = 0;
-    virtual Vector2i preferredSize(SDL_Renderer *ctx, const Widget *widget) const = 0;
+    virtual Vector2f preferredSize(SDL_Renderer *ctx, const Widget *widget) const = 0;
 protected:
     virtual ~Layout() { }
 };
@@ -87,7 +87,7 @@ public:
     void setSpacing(int spacing) { mSpacing = spacing; }
 
     /* Implementation of the layout interface */
-    virtual Vector2i preferredSize(SDL_Renderer *ctx, const Widget *widget) const override;
+    virtual Vector2f preferredSize(SDL_Renderer *ctx, const Widget *widget) const override;
     virtual void performLayout(SDL_Renderer *ctx, Widget *widget) const override;
 
 protected:
@@ -130,11 +130,11 @@ public:
     void setGroupSpacing(int groupSpacing) { mGroupSpacing = groupSpacing; }
 
     /* Implementation of the layout interface */
-    Vector2i preferredSize(SDL_Renderer *ctx, const Widget *widget) const override;
+    Vector2f preferredSize(SDL_Renderer *ctx, const Widget *widget) const override;
     void performLayout(SDL_Renderer *ctx, Widget *widget) const override;
 
 protected:
-    int mMargin;
+    float mMargin;
     int mSpacing;
     int mGroupSpacing;
     int mGroupIndent;
@@ -157,7 +157,7 @@ public:
     /// Create a 2-column grid layout by default
     GridLayout(Orientation orientation = Orientation::Horizontal, int resolution = 2,
                Alignment alignment = Alignment::Middle,
-               int margin = 0, int spacing = 0)
+               float margin = 0, float spacing = 0)
         : mOrientation(orientation), mResolution(resolution), mMargin(margin) 
     {
         mDefaultAlignment[0] = mDefaultAlignment[1] = alignment;
@@ -192,21 +192,21 @@ public:
     void setRowAlignment(const std::vector<Alignment> &value) { mAlignment[1] = value; }
 
     /* Implementation of the layout interface */
-    virtual Vector2i preferredSize(SDL_Renderer *ctx, const Widget *widget) const override;
+    virtual Vector2f preferredSize(SDL_Renderer *ctx, const Widget *widget) const override;
     virtual void performLayout(SDL_Renderer *ctx, Widget *widget) const override;
 
 protected:
     // Compute the maximum row and column sizes
     void computeLayout(SDL_Renderer *ctx, const Widget *widget,
-                       std::vector<int> *grid) const;
+                       std::vector<float> *grid) const;
 
 protected:
     Orientation mOrientation;
     Alignment mDefaultAlignment[2];
     std::vector<Alignment> mAlignment[2];
     int mResolution;
-    Vector2i mSpacing;
-    int mMargin;
+    Vector2f mSpacing;
+    float mMargin;
 };
 
 /**
@@ -315,7 +315,7 @@ public:
     }
 
     /* Implementation of the layout interface */
-    virtual Vector2i preferredSize(SDL_Renderer *ctx, const Widget *widget) const override;
+    virtual Vector2f preferredSize(SDL_Renderer *ctx, const Widget *widget) const override;
     virtual void performLayout(SDL_Renderer *ctx, Widget *widget) const override;
 
 protected:

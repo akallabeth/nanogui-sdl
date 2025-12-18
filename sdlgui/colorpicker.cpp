@@ -25,7 +25,7 @@ ColorPicker::ColorPicker(Widget *parent, const Color& color)
 
     mColorWheel = new ColorWheel(&p);
     mPickButton = new Button(&p, "Pick");
-    mPickButton->setFixedSize(Vector2i(100, 25));
+    mPickButton->setFixedSize(Vector2f(100, 25));
 
     PopupButton::setChangeCallback([&](bool) {
         setColor(backgroundColor());

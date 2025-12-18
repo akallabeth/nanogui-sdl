@@ -48,7 +48,7 @@ public:
     virtual void setTheme(Theme *theme) override;
 
     /// Compute the size needed to fully display the label
-    virtual Vector2i preferredSize(SDL_Renderer *ctx) const override;
+    virtual Vector2f preferredSize(SDL_Renderer *ctx) const override;
 
     /// Draw the label
     void draw(SDL_Renderer *renderer) override;

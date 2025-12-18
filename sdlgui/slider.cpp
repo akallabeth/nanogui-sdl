@@ -31,12 +31,12 @@ struct Slider::AsyncTexture
     Slider* slider = ptr;
     AsyncTexture* self = this;
     std::thread tgr([=]() {
-      Theme* mTheme = slider->theme();
+      auto mTheme = slider->theme();
       std::lock_guard<std::mutex> guard(mTheme->loadMutex);
 
-      int ww = slider->width();
-      int hh = slider->height();
-      int rh = hh / 3;
+      auto ww = slider->width();
+      auto hh = slider->height();
+      auto rh = hh / 3;
       auto mRange = slider->range();
       auto mHighlightedRange = slider->highlightedRange();
       NVGcontext *ctx = nvgCreateRT(NVG_DEBUG, ww, hh, 0);
@@ -85,18 +85,18 @@ struct Slider::AsyncTexture
     AsyncTexture* self = this;
 
     std::thread tgr([=]() {
-      Theme* mTheme = slider->theme();
+      auto mTheme = slider->theme();
       std::lock_guard<std::mutex> guard(mTheme->loadMutex);
 
-      int hh = slider->height();
-      int ww = hh;
+      auto hh = slider->height();
+      auto ww = hh;
 
       auto mRange = slider->range();
-      float mValue = slider->value();
+      auto mValue = slider->value();
 
-      NVGcontext *ctx = nvgCreateRT(NVG_DEBUG, ww, hh, 0);
+      auto ctx = nvgCreateRT(NVG_DEBUG, ww, hh, 0);
 
-      float pxRatio = 1.0f;
+      auto pxRatio = 1.0f;
       nvgBeginFrame(ctx, ww, hh, pxRatio);
 
       Vector2f center(hh / 2, hh / 2);
@@ -154,8 +154,8 @@ struct Slider::AsyncTexture
 
     if (tex.tex)
     {
-      int w, h;
-      SDL_QueryTexture(tex.tex, nullptr, nullptr, &w, &h);
+      float w, h;
+      SDL_GetTextureSize(tex.tex,  &w, &h);
       if (w != tex.w() || h != tex.h())
         SDL_DestroyTexture(tex.tex);
     }
@@ -182,12 +182,12 @@ Slider::Slider(Widget *parent, float value)
     mHighlightColor = Color(255, 80, 80, 70);
 }
 
-Vector2i Slider::preferredSize(SDL_Renderer *) const
+Vector2f Slider::preferredSize(SDL_Renderer *) const
 {
-    return Vector2i(70, 20);
+    return Vector2f(70, 20);
 }
 
-bool Slider::mouseDragEvent(const Vector2i &p, const Vector2i & /* rel */,
+bool Slider::mouseDragEvent(const Vector2f &p, const Vector2f & /* rel */,
                             int /* button */, int /* modifiers */) 
 {
     if (!mEnabled)
@@ -198,7 +198,7 @@ bool Slider::mouseDragEvent(const Vector2i &p, const Vector2i & /* rel */,
     return true;
 }
 
-bool Slider::mouseButtonEvent(const Vector2i &p, int /* button */, bool down, int /* modifiers */)
+bool Slider::mouseButtonEvent(const Vector2f &p, int /* button */, bool down, int /* modifiers */)
 {
     if (!mEnabled)
         return false;
@@ -219,9 +219,9 @@ void Slider::drawBody(SDL_Renderer* renderer)
 
   if (_body)
   {
-    Vector2i ap = absolutePosition();
+    Vector2f ap = absolutePosition();
     _body->perform(renderer);
-    SDL_RenderCopy(renderer, _body->tex, ap);
+    SDL_RenderTexture(renderer, _body->tex, ap);
   }
 }
 
@@ -235,11 +235,11 @@ void Slider::drawKnob(SDL_Renderer* renderer)
 
   if (_body)
   {
-    Vector2i ap = absolutePosition();
-    Vector2i knobPos(ap.x + mValue * mSize.x, ap.y + height() * 0.5f);
+    Vector2f ap = absolutePosition();
+    Vector2f knobPos(ap.x + mValue * mSize.x, ap.y + height() * 0.5f);
 
     _knob->perform(renderer);
-    SDL_RenderCopy(renderer, _knob->tex, knobPos - Vector2i(_knob->tex.w()/2, _knob->tex.h()/2));
+    SDL_RenderTexture(renderer, _knob->tex, knobPos - Vector2f(_knob->tex.w()/2, _knob->tex.h()/2));
   }
 }
 
@@ -260,8 +260,8 @@ void Slider::draw(SDL_Renderer* renderer)
     SDL_RenderFillRectF(renderer, &hlRect);
   }
 
-  SDL_RenderCopy(renderer, _outerKnobTex, (knobPos + Vector2f( - _outerKnobTex.w() / 2.f, - _outerKnobTex.h() / 2.f)).As<int>());
-  SDL_RenderCopy(renderer, _innerKnobTex, (knobPos + Vector2f( - _innerKnobTex.w() / 2.f, - _innerKnobTex.h() / 2.f)).As<int>());
+  SDL_RenderTexture(renderer, _outerKnobTex, (knobPos + Vector2f( - _outerKnobTex.w() / 2.f, - _outerKnobTex.h() / 2.f)).As<int>());
+  SDL_RenderTexture(renderer, _innerKnobTex, (knobPos + Vector2f( - _innerKnobTex.w() / 2.f, - _innerKnobTex.h() / 2.f)).As<int>());
   */
 }
 

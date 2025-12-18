@@ -90,7 +90,7 @@ public:
     Widget* tab(const std::string &label);
 
     void performLayout(SDL_Renderer* ctx) override;
-    Vector2i preferredSize(SDL_Renderer* ctx) const override;
+    Vector2f preferredSize(SDL_Renderer* ctx) const override;
     void draw(SDL_Renderer* ctx) override;
 
 private:

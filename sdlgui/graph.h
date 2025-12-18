@@ -42,7 +42,7 @@ public:
     std::vector<float>  &values() { return mValues; }
     void setValues(const  std::vector<float>  &values) { mValues = values; }
 
-    Vector2i preferredSize(SDL_Renderer *ctx) const override;
+    Vector2f preferredSize(SDL_Renderer *ctx) const override;
     void draw(SDL_Renderer *ctx) override;
 
 protected:

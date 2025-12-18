@@ -36,8 +36,8 @@ public:
     std::function<void(bool)> callback() const { return mCallback; }
     void setCallback(const std::function<void(bool)> &callback) { mCallback = callback; }
 
-    virtual bool mouseButtonEvent(const Vector2i &p, int button, bool down, int modifiers);
-    Vector2i preferredSize(SDL_Renderer *ctx) const override;
+    virtual bool mouseButtonEvent(const Vector2f &p, int button, bool down, int modifiers);
+    Vector2f preferredSize(SDL_Renderer *ctx) const override;
     void draw(SDL_Renderer *ctx) override;
     virtual void drawBody(SDL_Renderer* renderer);
 protected:

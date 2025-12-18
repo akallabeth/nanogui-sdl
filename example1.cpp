@@ -39,16 +39,8 @@
 #endif
 #include <iostream>
 
-#if defined(_WIN32)
-#include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
-#if defined(_WIN32)
-#include <SDL_image.h>
-#else
-#include <SDL2/SDL_image.h>
-#endif
+#include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
 
 using std::cout;
 using std::cerr;
@@ -62,10 +54,10 @@ class TestWindow : public Screen
 {
 public:
     TestWindow( SDL_Window* pwindow, int rwidth, int rheight )
-      : Screen( pwindow, Vector2i(rwidth, rheight), "SDL_gui Test")
+      : Screen( pwindow, Vector2f(rwidth, rheight), "SDL_gui Test")
       {
         {
-          auto& nwindow = window("Button demo", Vector2i{15, 15})
+          auto& nwindow = window("Button demo", Vector2f{15, 15})
                             .withLayout<GroupLayout>();
 
           nwindow.label("Push buttons", "sans-bold")._and()
@@ -108,7 +100,7 @@ public:
         ListImages images = loadImageDirectory(SDL_GetRenderer(pwindow), "icons");
 
         {
-          auto& pwindow = window("Basic widgets", Vector2i{ 200, 15 }).withLayout<GroupLayout>();
+          auto& pwindow = window("Basic widgets", Vector2f{ 200, 15 }).withLayout<GroupLayout>();
                           
           pwindow.label("Message dialog", "sans-bold")._and()
                  .widget()
@@ -130,12 +122,12 @@ public:
           mCurrentImage = 0;
           for (auto& icon : images) mImagesData.emplace_back(icon.tex);
 
-          auto& img_window = window("Selected image", Vector2i(675, 15));
+          auto& img_window = window("Selected image", Vector2f(675, 15));
           img_window.withLayout<GroupLayout>();
           
           auto imageView = img_window.add<ImageView>(mImagesData[0]);
 
-          imagePanelBtn.popup(Vector2i(245, 150))
+          imagePanelBtn.popup(Vector2f(245, 150))
                          .vscrollpanel()
                            .imgpanel(images)
                              .setCallback([this, imageView](int i)
@@ -153,11 +145,12 @@ public:
           imageView->setGridThreshold(20);
           imageView->setPixelInfoThreshold(20);
           imageView->setPixelInfoCallback(
-              [this, imageView](const Vector2i& index) -> std::pair<std::string, Color>
+              [this, imageView](const Vector2f& index) -> std::pair<std::string, Color>
               {
                 void *pixels;
-                int pitch, w, h;
-                SDL_QueryTexture(mImagesData[mCurrentImage], nullptr, nullptr, &w, &h);
+                  int pitch;
+                float w, h;
+                SDL_GetTextureSize(mImagesData[mCurrentImage], &w, &h);
 
                 SDL_LockTexture(mImagesData[mCurrentImage], nullptr, &pixels, &pitch);
                 Uint32 *imageData = (Uint32*)pixels;
@@ -166,8 +159,8 @@ public:
                 uint16_t channelSum = 0;
                 for (int i = 0; i != 4; ++i) 
                 {
-                    uint8_t *data = (uint8_t*)imageData;
-                    auto& channelData = data[4*index.y*w + 4*index.x + i];
+                    uint8_t *data = reinterpret_cast<uint8_t*>(imageData);
+                    auto& channelData = data[static_cast<size_t>(4*index.y*w + 4*index.x + i)];
                     channelSum += channelData;
                     stringData += (std::to_string(static_cast<int>(channelData)) + "\n");
                 }
@@ -209,7 +202,7 @@ public:
                         .withFixedWidth(80)._and()
                  .textbox("50", "%").withAlignment(TextBox::Alignment::Right)
                     .withId("slider-textbox")
-                    .withFixedSize(Vector2i(60, 25))
+                    .withFixedSize(Vector2f(60, 25))
                     .withFontSize(20);
 
           pwindow.label("A switch boxes", "sans-bold");
@@ -217,7 +210,7 @@ public:
           swbx->setLayout(new BoxLayout(Orientation::Horizontal, Alignment::Middle, 0, 2));
 
           auto* swbh = new SwitchBox(swbx, SwitchBox::Alignment::Horizontal, "");
-          swbh->setFixedSize(Vector2i(84, 32));
+          swbh->setFixedSize(Vector2f(84, 32));
           new SwitchBox(swbx, SwitchBox::Alignment::Vertical, "");
         }
 
@@ -293,7 +286,7 @@ public:
           ib->setEditable(true);
 
           auto b = panel.add<Button>("", ENTYPO_ICON_FORWARD);
-          b->setFixedSize(Vector2i(22, 22));
+          b->setFixedSize(Vector2f(22, 22));
           ib->setFixedHeight(22);
           b->setCallback([tabWidget, ib] {
               int value = ib->value();
@@ -316,7 +309,7 @@ public:
           window.add<Label>("Floating point :", "sans-bold");
           auto& textBox = window.wdg<TextBox>();
           textBox.setEditable(true);
-          textBox.setFixedSize(Vector2i(100, 20));
+          textBox.setFixedSize(Vector2f(100, 20));
           textBox.setValue("50");
           textBox.setUnits("GiB");
           textBox.setDefaultValue("0.0");
@@ -326,7 +319,7 @@ public:
           window.add<Label>("Positive integer :", "sans-bold");
           auto& textBox2 = window.wdg<TextBox>();
           textBox2.setEditable(true);
-          textBox2.setFixedSize(Vector2i(100, 20));
+          textBox2.setFixedSize(Vector2f(100, 20));
           textBox2.setValue("50");
           textBox2.setUnits("Mhz");
           textBox2.setDefaultValue("0.0");
@@ -343,20 +336,20 @@ public:
           window.wdg<ComboBox>()
                 .withItems(std::vector<std::string>{ "Item 1", "Item 2", "Item 3" })
                 .withFontSize(16)
-                .withFixedSize(Vector2i(100,20));
+                .withFixedSize(Vector2f(100,20));
 
           window.add<Label>("Color button :", "sans-bold");
           auto& popupBtn = window.wdg<PopupButton>("", 0);
           popupBtn.setBackgroundColor(Color(255, 120, 0, 255));
           popupBtn.setFontSize(16);
-          popupBtn.setFixedSize(Vector2i(100, 20));
+          popupBtn.setFixedSize(Vector2f(100, 20));
           auto& popup = popupBtn.popup().withLayout<GroupLayout>();
 
           ColorWheel& colorwheel = popup.wdg<ColorWheel>();
           colorwheel.setColor(popupBtn.backgroundColor());
 
           Button& colorBtn = popup.wdg<Button>("Pick");
-          colorBtn.setFixedSize(Vector2i(100, 25));
+          colorBtn.setFixedSize(Vector2f(100, 25));
           Color c = colorwheel.color();
           colorBtn.setBackgroundColor(c);
 
@@ -443,9 +436,8 @@ private:
 int main(int /* argc */, char ** /* argv */)
 {
     char rendername[256] = {0};
-    SDL_RendererInfo info;
 
-    SDL_Init(SDL_INIT_VIDEO);   // Initialize SDL2
+    SDL_Init(SDL_INIT_VIDEO);   // Initialize SDL3
 
     SDL_Window *window;        // Declare a pointer to an SDL_Window
 
@@ -462,12 +454,10 @@ int main(int /* argc */, char ** /* argv */)
 
     // Create an application window with the following settings:
     window = SDL_CreateWindow(
-      "An SDL2 window",         //    const char* title
-      SDL_WINDOWPOS_UNDEFINED,  //    int x: initial x position
-      SDL_WINDOWPOS_UNDEFINED,  //    int y: initial y position
+      "An SDL3 window",         //    const char* title
       winWidth,                      //    int w: width, in pixels
       winHeight,                      //    int h: height, in pixels
-      SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN  | SDL_WINDOW_ALLOW_HIGHDPI        //    Uint32 flags: window options, see docs
+      SDL_WINDOW_OPENGL        //    Uint32 flags: window options, see docs
     );
 
     // Check that the window was successfully made
@@ -481,12 +471,12 @@ int main(int /* argc */, char ** /* argv */)
     auto context = SDL_GL_CreateContext(window);
 
     for (int it = 0; it < SDL_GetNumRenderDrivers(); it++) {
-        SDL_GetRenderDriverInfo(it, &info);
-        strcat(rendername, info.name);
+        auto name = SDL_GetRenderDriver(it);
+        strcat(rendername, name);
         strcat(rendername, " ");
     }
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    auto renderer = SDL_CreateRenderer(window, nullptr);
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
     TestWindow *screen = new TestWindow(window, winWidth, winHeight);
@@ -503,7 +493,7 @@ int main(int /* argc */, char ** /* argv */)
             while( SDL_PollEvent( &e ) != 0 )
             {
                 //User requests quit
-                if( e.type == SDL_QUIT )
+                if( e.type == SDL_EVENT_QUIT )
                 {
                     quit = true;
                 }

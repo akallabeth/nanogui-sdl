@@ -13,11 +13,7 @@
 #include <sdlgui/imageview.h>
 #include <sdlgui/window.h>
 #include <sdlgui/screen.h>
-#if defined(_WIN32)
-#include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
+#include <SDL3/SDL.h>
 #include <sdlgui/theme.h>
 #include <cmath>
 
@@ -125,7 +121,7 @@ void ImageView::zoom(int amount, const Vector2f& focusPosition)
     setImageCoordinateAt(focusPosition, focusedCoordinate);
 }
 
-bool ImageView::mouseDragEvent(const Vector2i& p, const Vector2i& rel, int button, int /*modifiers*/)
+bool ImageView::mouseDragEvent(const Vector2f& p, const Vector2f& rel, int button, int /*modifiers*/)
 {
     if ((button & (1 << SDL_BUTTON_LEFT)) != 0 && !mFixedOffset) 
     {
@@ -150,7 +146,7 @@ bool ImageView::helpersVisible() const
     return gridVisible() || pixelInfoVisible();
 }
 
-bool ImageView::scrollEvent(const Vector2i& p, const Vector2f& rel)
+bool ImageView::scrollEvent(const Vector2f& p, const Vector2f& rel)
 {
   if (mFixedScale)
     return false;
@@ -161,7 +157,7 @@ bool ImageView::scrollEvent(const Vector2i& p, const Vector2f& rel)
     return true;
 }
 
-bool ImageView::keyboardEvent(int key, int /*scancode*/, int action, int modifiers) 
+bool ImageView::keyboardEvent(int key, int /*scancode*/, bool action, uint16_t modifiers) 
 {
     if (action) {
         switch (key) {
@@ -200,6 +196,8 @@ bool ImageView::keyboardEvent(int key, int /*scancode*/, int action, int modifie
                     moveOffset(Vector2f(0, 10));
                 return true;
             }
+            break;
+        default:
             break;
         }
     }
@@ -245,7 +243,7 @@ bool ImageView::keyboardCharacterEvent(unsigned int codepoint) {
     return false;
 }
 
-Vector2i ImageView::preferredSize(SDL_Renderer* /*ctx*/) const 
+Vector2f ImageView::preferredSize(SDL_Renderer* /*ctx*/) const 
 {
     return mImageSize;
 }
@@ -259,9 +257,9 @@ void ImageView::draw(SDL_Renderer* renderer)
 {
     Widget::draw(renderer);
 
-    SDL_Point ap = getAbsolutePos();
+    auto ap = getAbsolutePos();
 
-    const Screen* screen = dynamic_cast<const Screen*>(this->window()->parent());
+    auto screen = dynamic_cast<const Screen*>(this->window()->parent());
     assert(screen);
     Vector2f screenSize = screen->size().tofloat();
     Vector2f scaleFactor = imageSizeF().cquotient(screenSize) * mScale;
@@ -271,22 +269,22 @@ void ImageView::draw(SDL_Renderer* renderer)
 
     if (mTexture)
     {
-      Vector2i borderPosition = Vector2i{ ap.x, ap.y } + mOffset.toint();
-      Vector2i borderSize = scaledImageSizeF().toint();
+      Vector2f borderPosition = Vector2f{ ap.x, ap.y } + mOffset;
+      Vector2f borderSize = scaledImageSizeF();
 
-      SDL_Rect br{ borderPosition.x + 1, borderPosition.y + 1,  borderSize.x - 2, borderSize.y - 2 };
+      SDL_FRect br{ borderPosition.x + 1, borderPosition.y + 1,  borderSize.x - 2, borderSize.y - 2 };
 
-      PntRect r = srect2pntrect(br);
-      PntRect wr = { ap.x, ap.y, ap.x + width(), ap.y + height() };
+      PntFRect r = srect2PntFRect(br);
+      PntFRect wr = { ap.x, ap.y, ap.x + width(), ap.y + height() };
 
       if (r.x1 <= wr.x1) r.x1 = wr.x1;
       if (r.x2 >= wr.x2) r.x2 = wr.x2;
       if (r.y1 <= wr.y1) r.y1 = wr.y1;
       if (r.y2 >= wr.y2) r.y2 = wr.y2;
 
-      int ix = 0, iy = 0;
-      int iw = r.x2 - r.x1;
-      int ih = r.y2 - r.y1;
+      auto ix = 0.0f, iy = 0.0f;
+      auto iw = r.x2 - r.x1;
+      auto ih = r.y2 - r.y1;
       if (positionAfterOffset.x <= ap.x)
       {
         ix = ap.x - positionAfterOffset.x;
@@ -299,15 +297,15 @@ void ImageView::draw(SDL_Renderer* renderer)
         ih = mImageSize.y - iy;
         positionAfterOffset.y = absolutePosition().y;
       }
-      SDL_Rect imgrect{ix, iy, iw, ih};
-      SDL_Rect rect{ 
-          (int)std::round(positionAfterOffset.x), 
-          (int)std::round(positionAfterOffset.y), 
+      SDL_FRect imgrect{ix, iy, iw, ih};
+      SDL_FRect rect{ 
+          std::round(positionAfterOffset.x), 
+          std::round(positionAfterOffset.y), 
           imgrect.w, 
           imgrect.h
      };
 
-      SDL_RenderCopy(renderer, mTexture, &imgrect, &rect);
+      SDL_RenderTexture(renderer, mTexture, &imgrect, &rect);
     }
 
     drawWidgetBorder(renderer, ap);
@@ -320,37 +318,37 @@ void ImageView::draw(SDL_Renderer* renderer)
 
 void ImageView::updateImageParameters() 
 {
-  int w, h;
-  SDL_QueryTexture(mTexture, nullptr, nullptr, &w, &h);
-  mImageSize = Vector2i(w, h);
+  float w, h;
+  SDL_GetTextureSize(mTexture, &w, &h);
+  mImageSize = Vector2f(w, h);
 }
 
-void ImageView::drawWidgetBorder(SDL_Renderer* renderer, const SDL_Point& ap) const 
+void ImageView::drawWidgetBorder(SDL_Renderer* renderer, const SDL_FPoint& ap) const 
 {
   SDL_Color lc = mTheme->mBorderLight.toSdlColor();
 
-  SDL_Rect lr{ ap.x - 1, ap.y - 1, mSize.x + 2, mSize.y + 2 };
+  SDL_FRect lr{ ap.x - 1, ap.y - 1, mSize.x + 2, mSize.y + 2 };
 
   SDL_SetRenderDrawColor(renderer, lc.r, lc.g, lc.b, lc.a);
-  SDL_RenderDrawRect(renderer, &lr);
+  SDL_RenderRect(renderer, &lr);
 
   SDL_Color dc = mTheme->mBorderDark.toSdlColor();
-  SDL_Rect dr{ ap.x - 1, ap.y - 1, mSize.x + 2, mSize.y + 2 };
+  SDL_FRect dr{ ap.x - 1, ap.y - 1, mSize.x + 2, mSize.y + 2 };
 
   SDL_SetRenderDrawColor(renderer, dc.r, dc.g, dc.b, dc.a);
-  SDL_RenderDrawRect(renderer, &dr);
+  SDL_RenderRect(renderer, &dr);
 }
 
-void ImageView::drawImageBorder(SDL_Renderer* renderer, const SDL_Point& ap) const
+void ImageView::drawImageBorder(SDL_Renderer* renderer, const SDL_FPoint& ap) const
 {
-  Vector2i borderPosition = Vector2i{ ap.x, ap.y } + mOffset.toint();
-  Vector2i borderSize = scaledImageSizeF().toint();
+  auto borderPosition = Vector2f{ ap.x, ap.y } + mOffset;
+  auto borderSize = scaledImageSizeF();
   
-  SDL_Rect br{ borderPosition.x + 1, borderPosition.y + 1,
+  SDL_FRect br{ borderPosition.x + 1, borderPosition.y + 1,
                 borderSize.x - 2, borderSize.y - 2 };
 
-  PntRect r = srect2pntrect(br);
-  PntRect wr = { ap.x, ap.y, ap.x + width(), ap.y + height() };
+  auto r = srect2PntFRect(br);
+  PntFRect wr = { ap.x, ap.y, ap.x + width(), ap.y + height() };
 
   if (r.x1 <= wr.x1) r.x1 = wr.x1;
   if (r.x2 >= wr.x2) r.x2 = wr.x2;
@@ -358,10 +356,10 @@ void ImageView::drawImageBorder(SDL_Renderer* renderer, const SDL_Point& ap) con
   if (r.y2 >= wr.y2) r.y2 = wr.y2;
   
   SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-  if (r.x1 > wr.x1) SDL_RenderDrawLine(renderer, r.x1, r.y1, r.x1, r.y2 - 1 );
-  if (r.y1 > wr.y1) SDL_RenderDrawLine(renderer, r.x1, r.y1, r.x2-1, r.y1 );
-  if (r.x2 < wr.x2) SDL_RenderDrawLine(renderer, r.x2, r.y1, r.x2, r.y2 - 1);
-  if (r.y2 < wr.y2) SDL_RenderDrawLine(renderer, r.x1, r.y2, r.x2-1, r.y2);
+  if (r.x1 > wr.x1) SDL_RenderLine(renderer, r.x1, r.y1, r.x1, r.y2 - 1 );
+  if (r.y1 > wr.y1) SDL_RenderLine(renderer, r.x1, r.y1, r.x2-1, r.y1 );
+  if (r.x2 < wr.x2) SDL_RenderLine(renderer, r.x2, r.y1, r.x2, r.y2 - 1);
+  if (r.y2 < wr.y2) SDL_RenderLine(renderer, r.x1, r.y2, r.x2-1, r.y2);
 }
 
 void ImageView::drawHelpers(SDL_Renderer* renderer) const 
@@ -373,11 +371,11 @@ void ImageView::drawHelpers(SDL_Renderer* renderer) const
   Vector2f sizeOffsetDifference = sizeF() - mOffset;
   Vector2f scissorSize = sizeOffsetDifference.cmin(sizeF());
 
-  SDL_Rect r{
-      (int)std::round(scissorPosition.x),
-      (int)std::round(scissorPosition.y),
-      (int)std::round(scissorSize.x),
-      (int)std::round(scissorSize.y)
+  SDL_FRect r{
+      std::round(scissorPosition.x),
+      std::round(scissorPosition.y),
+      std::round(scissorSize.x),
+      std::round(scissorSize.y)
   };
   if (gridVisible())
     drawPixelGrid(renderer, upperLeftCorner, lowerRightCorner, mScale);
@@ -394,7 +392,7 @@ void ImageView::drawPixelGrid(SDL_Renderer* renderer, const Vector2f& upperLeftC
     float currentX = std::floor(upperLeftCorner.x);
     while (currentX <= lowerRightCorner.x) 
     {
-      SDL_RenderDrawLine(renderer, std::floor(currentX), std::floor(upperLeftCorner.y),
+      SDL_RenderLine(renderer, std::floor(currentX), std::floor(upperLeftCorner.y),
                           std::floor(currentX), std::floor(lowerRightCorner.y));
       currentX += stride;
     }
@@ -402,7 +400,7 @@ void ImageView::drawPixelGrid(SDL_Renderer* renderer, const Vector2f& upperLeftC
     float currentY = std::floor(upperLeftCorner.y);
     while (currentY <= lowerRightCorner.y) 
     {
-      SDL_RenderDrawLine(renderer, std::floor(upperLeftCorner.x), std::floor(currentY),
+      SDL_RenderLine(renderer, std::floor(upperLeftCorner.x), std::floor(currentY),
                                     std::floor(lowerRightCorner.x), std::floor(currentY));
       currentY += stride;
     }
@@ -417,13 +415,13 @@ void ImageView::drawPixelInfo(SDL_Renderer* renderer, const float stride) const
     // This is done so that the edge information does not pop up suddenly when it gets in range.
     currentPixelF = currentPixelF.floor();
     lastPixelF = lastPixelF.ceil();
-    Vector2i currentPixel = currentPixelF.cast<int>();
-    Vector2i lastPixel = lastPixelF.cast<int>();
+    Vector2f currentPixel = currentPixelF;
+    Vector2f lastPixel = lastPixelF;
 
     // Extract the positions for where to draw the text.
     Vector2f currentCellPosition = (positionF() + positionForCoordinate(currentPixelF));
-    float xInitialPosition = currentCellPosition.x;
-    int xInitialIndex = currentPixel.x;
+    auto xInitialPosition = currentCellPosition.x;
+    auto xInitialIndex = currentPixel.x;
 
     // Properly scale the pixel information for the given stride.
     auto fontSize = stride * mFontScaleFactor;
@@ -452,7 +450,7 @@ void ImageView::drawPixelInfo(SDL_Renderer* renderer, const float stride) const
 }
 
 void ImageView::writePixelInfo(SDL_Renderer* renderer, const Vector2f& cellPosition,
-                               const Vector2i& pixel, const float stride) const
+                               const Vector2f& pixel, const float stride) const
 {
  /*   auto pixelData = mPixelInfoCallback(pixel);
     auto pixelDataRows = splitString(pixelData.first, "\n");

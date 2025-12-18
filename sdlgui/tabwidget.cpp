@@ -135,8 +135,8 @@ const std::string &TabWidget::tabLabelAt(int index) const
 
 void TabWidget::performLayout(SDL_Renderer* ctx) 
 {
-    int headerHeight = mHeader->preferredSize(ctx).y;
-    int margin = mTheme->mTabInnerMargin;
+    auto headerHeight = mHeader->preferredSize(ctx).y;
+    auto margin = mTheme->mTabInnerMargin;
     mHeader->setPosition({ 0, 0 });
     mHeader->setSize({ mSize.x, headerHeight });
     mHeader->performLayout(ctx);
@@ -145,44 +145,44 @@ void TabWidget::performLayout(SDL_Renderer* ctx)
     mContent->performLayout(ctx);
 }
 
-Vector2i TabWidget::preferredSize(SDL_Renderer* ctx) const
+Vector2f TabWidget::preferredSize(SDL_Renderer* ctx) const
 {
     auto contentSize = mContent->preferredSize(ctx);
     auto headerSize = mHeader->preferredSize(ctx);
-    int margin = mTheme->mTabInnerMargin;
-    auto borderSize = Vector2i{ 2 * margin, 2 * margin };
-    Vector2i tabPreferredSize = contentSize + borderSize + Vector2i{ 0, headerSize.y };
+    auto margin = mTheme->mTabInnerMargin;
+    auto borderSize = Vector2f{ 2 * margin, 2 * margin };
+    Vector2f tabPreferredSize = contentSize + borderSize + Vector2f{ 0, headerSize.y };
     return tabPreferredSize;
 }
 
 void TabWidget::draw(SDL_Renderer* renderer) 
 {
-    int tabHeight = mHeader->preferredSize(nullptr).y;
+    auto tabHeight = mHeader->preferredSize(nullptr).y;
     auto activeArea = mHeader->activeButtonArea();
 
     for (int i = 0; i < 3; ++i) 
     {
-      int x = getAbsoluteLeft();
-      int y = getAbsoluteTop();
-      SDL_Color bl = mTheme->mBorderLight.toSdlColor();
-      SDL_Rect blr{ x + 1, y + tabHeight + 2, mSize.x - 2,  mSize.y - tabHeight - 2 };
+      auto x = getAbsoluteLeft();
+      auto y = getAbsoluteTop();
+      auto bl = mTheme->mBorderLight.toSdlColor();
+      SDL_FRect blr{ x + 1, y + tabHeight + 2, mSize.x - 2,  mSize.y - tabHeight - 2 };
 
       SDL_SetRenderDrawColor(renderer, bl.r, bl.g, bl.b, bl.a);
-      SDL_RenderDrawLine(renderer, blr.x, blr.y, x + activeArea.first.x, blr.y);
-      SDL_RenderDrawLine(renderer, x + activeArea.second.x, blr.y, blr.x + blr.w, blr.y);
-      SDL_RenderDrawLine(renderer, blr.x + blr.w, blr.y, blr.x + blr.w, blr.y + blr.h);
-      SDL_RenderDrawLine(renderer, blr.x, blr.y, blr.x, blr.y + blr.h);
-      SDL_RenderDrawLine(renderer, blr.x, blr.y + blr.h, blr.x + blr.w, blr.y + blr.h);
+      SDL_RenderLine(renderer, blr.x, blr.y, x + activeArea.first.x, blr.y);
+      SDL_RenderLine(renderer, x + activeArea.second.x, blr.y, blr.x + blr.w, blr.y);
+      SDL_RenderLine(renderer, blr.x + blr.w, blr.y, blr.x + blr.w, blr.y + blr.h);
+      SDL_RenderLine(renderer, blr.x, blr.y, blr.x, blr.y + blr.h);
+      SDL_RenderLine(renderer, blr.x, blr.y + blr.h, blr.x + blr.w, blr.y + blr.h);
 
-      SDL_Color bd = mTheme->mBorderDark.toSdlColor();
-      SDL_Rect bdr{ x + 1, y + tabHeight + 1, mSize.x - 2, mSize.y - tabHeight - 2 };
+      auto bd = mTheme->mBorderDark.toSdlColor();
+      SDL_FRect bdr{ x + 1, y + tabHeight + 1, mSize.x - 2, mSize.y - tabHeight - 2 };
 
       SDL_SetRenderDrawColor(renderer, bd.r, bd.g, bd.b, bd.a);
-      SDL_RenderDrawLine(renderer, bdr.x, bdr.y, x + activeArea.first.x, bdr.y);
-      SDL_RenderDrawLine(renderer, x + activeArea.second.x, bdr.y, bdr.x + bdr.w, bdr.y);
-      SDL_RenderDrawLine(renderer, bdr.x + bdr.w, bdr.y, bdr.x + bdr.w, bdr.y + bdr.h);
-      SDL_RenderDrawLine(renderer, bdr.x, bdr.y, bdr.x, bdr.y + bdr.h);
-      SDL_RenderDrawLine(renderer, bdr.x, bdr.y + bdr.h, bdr.x + bdr.w, bdr.y + bdr.h);
+      SDL_RenderLine(renderer, bdr.x, bdr.y, x + activeArea.first.x, bdr.y);
+      SDL_RenderLine(renderer, x + activeArea.second.x, bdr.y, bdr.x + bdr.w, bdr.y);
+      SDL_RenderLine(renderer, bdr.x + bdr.w, bdr.y, bdr.x + bdr.w, bdr.y + bdr.h);
+      SDL_RenderLine(renderer, bdr.x, bdr.y, bdr.x, bdr.y + bdr.h);
+      SDL_RenderLine(renderer, bdr.x, bdr.y + bdr.h, bdr.x + bdr.w, bdr.y + bdr.h);
 
     }
 

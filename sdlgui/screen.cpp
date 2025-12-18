@@ -17,15 +17,11 @@
 #include <iostream>
 #include <map>
 
-#if defined(_WIN32)
-#include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
+#include <SDL3/SDL.h>
 
 NAMESPACE_BEGIN(sdlgui)
 
-Screen::Screen( SDL_Window* window, const Vector2i &size, const std::string &caption,
+Screen::Screen( SDL_Window* window, const Vector2f &size, const std::string &caption,
                bool resizable, bool fullscreen)
     : Widget(nullptr), _window(nullptr), mSDL_Renderer(nullptr), mCaption(caption)
 {
@@ -37,7 +33,7 @@ bool Screen::onEvent(SDL_Event& event)
 {
     switch( event.type )
     {
-    case SDL_MOUSEWHEEL:
+    case SDL_EVENT_MOUSE_WHEEL:
     {
         if (!mProcessEvents)
             return false;
@@ -45,7 +41,7 @@ bool Screen::onEvent(SDL_Event& event)
     }
     break;
 
-    case SDL_MOUSEMOTION:
+    case SDL_EVENT_MOUSE_MOTION:
     {
       if (!mProcessEvents)
          return false;
@@ -53,8 +49,8 @@ bool Screen::onEvent(SDL_Event& event)
     }
     break;
 
-    case SDL_MOUSEBUTTONDOWN:
-    case SDL_MOUSEBUTTONUP:
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
     {
       if (!mProcessEvents)
         return false;
@@ -64,18 +60,18 @@ bool Screen::onEvent(SDL_Event& event)
     }
     break;
 
-    case SDL_KEYDOWN:
-    case SDL_KEYUP:
+    case SDL_EVENT_KEY_DOWN:
+    case SDL_EVENT_KEY_UP:
     {
       if (!mProcessEvents)
         return false;
 
       SDL_Keymod mods = SDL_GetModState();
-      return keyCallbackEvent(event.key.keysym.sym, event.key.keysym.scancode, event.key.state, mods);
+      return keyCallbackEvent(event.key.key, event.key.scancode, event.key.down, mods);
     }
     break;
 
-    case SDL_TEXTINPUT:
+    case SDL_EVENT_TEXT_INPUT:
     {
       if (!mProcessEvents)
         return false;
@@ -88,9 +84,12 @@ bool Screen::onEvent(SDL_Event& event)
 
 void Screen::initialize(SDL_Window* window)
 {
-    _window = window;    
-    SDL_GetWindowSize( window, &mSize[0], &mSize[1]);
-    SDL_GetWindowSize( window, &mFBSize[0], &mFBSize[1]);
+    _window = window;
+    int w, h;
+    SDL_GetWindowSize( window, &w, &h);
+    mFBSize[0] = mSize[0] = w;
+    mFBSize[1] = mSize[1] = h;
+    
     mSDL_Renderer = SDL_GetRenderer(window);
     
     if (mSDL_Renderer == nullptr)
@@ -132,7 +131,7 @@ void Screen::setCaption(const std::string &caption)
     }
 }
 
-void Screen::setSize(const Vector2i &size)
+void Screen::setSize(const Vector2f &size)
 {
     Widget::setSize(size);
     SDL_SetWindowSize(_window, size.x, size.y);
@@ -155,8 +154,8 @@ void Screen::drawWidgets()
     SDL_Renderer* renderer = SDL_GetRenderer(_window);
     draw(renderer);
 
-    double elapsed = SDL_GetTicks() - mLastInteraction;
-    if (elapsed > 0.5f) 
+    auto elapsed = SDL_GetTicks() - mLastInteraction;
+    if (elapsed > 0) 
     {
         /* Draw tooltips */
         const Widget *widget = findWidget(mMousePos);
@@ -167,32 +166,32 @@ void Screen::drawWidgets()
             if (_lastTooltip != widget->tooltip())
             {
               _lastTooltip = widget->tooltip();
-              mTheme->getTexAndRectUtf8(renderer, _tooltipTex, 0, 0, _lastTooltip.c_str(), "sans", 15, Color(1.f, 1.f));
+              mTheme->getTexAndRectUtf8(renderer, _tooltipTex, 0, 0, _lastTooltip, "sans", 15, Color(1.f, 1.f));
             }
 
             if (_tooltipTex.tex)
             {
-              Vector2i pos = widget->absolutePosition() + Vector2i(widget->width() / 2, widget->height() + 10);
+              Vector2f pos = widget->absolutePosition() + Vector2f(widget->width() / 2, widget->height() + 10);
 
-              float alpha = (std::min(1.0, 2 * (elapsed - 0.5f)) * 0.8) * 255;
+              auto alpha = (std::min(1ul, 2ul * elapsed) * 0.8) * 255;
               SDL_SetTextureAlphaMod(_tooltipTex.tex, alpha);
 
-              SDL_Rect bgrect{ pos.x - 2, pos.y - 2 - _tooltipTex.h(), _tooltipTex.w() + 4, _tooltipTex.h() + 4 };
+              SDL_FRect bgrect{ pos.x - 2, pos.y - 2 - _tooltipTex.h(), _tooltipTex.w() + 4, _tooltipTex.h() + 4 };
 
               SDL_SetRenderDrawColor(renderer, 0, 0, 0, alpha);
               SDL_RenderFillRect(renderer, &bgrect);
-              SDL_RenderCopy(renderer, _tooltipTex, Vector2i(pos.x, pos.y - _tooltipTex.h()));
+              SDL_RenderTexture(renderer, _tooltipTex, Vector2f(pos.x, pos.y - _tooltipTex.h()));
               SDL_SetRenderDrawColor(renderer, 255, 255, 255, alpha);
-              SDL_RenderDrawLine(renderer, bgrect.x, bgrect.y, bgrect.x + bgrect.w, bgrect.y);
-              SDL_RenderDrawLine(renderer, bgrect.x + bgrect.w, bgrect.y, bgrect.x + bgrect.w, bgrect.y + bgrect.h);
-              SDL_RenderDrawLine(renderer, bgrect.x, bgrect.y + bgrect.h, bgrect.x + bgrect.w, bgrect.y + bgrect.h);
-              SDL_RenderDrawLine(renderer, bgrect.x, bgrect.y, bgrect.x, bgrect.y + bgrect.h);
+              SDL_RenderLine(renderer, bgrect.x, bgrect.y, bgrect.x + bgrect.w, bgrect.y);
+              SDL_RenderLine(renderer, bgrect.x + bgrect.w, bgrect.y, bgrect.x + bgrect.w, bgrect.y + bgrect.h);
+              SDL_RenderLine(renderer, bgrect.x, bgrect.y + bgrect.h, bgrect.x + bgrect.w, bgrect.y + bgrect.h);
+              SDL_RenderLine(renderer, bgrect.x, bgrect.y, bgrect.x, bgrect.y + bgrect.h);
             }
         }
     }
 }
 
-bool Screen::keyboardEvent(int key, int scancode, int action, int modifiers) 
+bool Screen::keyboardEvent(int key, int scancode, bool action, uint16_t modifiers) 
 {
     if (mFocusPath.size() > 0) 
     {
@@ -215,12 +214,12 @@ bool Screen::keyboardCharacterEvent(unsigned int codepoint) {
 
 bool Screen::cursorPosCallbackEvent(double x, double y) 
 {
-  Vector2i p((int) x, (int) y);
+  Vector2f p((int) x, (int) y);
     bool ret = false;
     mLastInteraction = SDL_GetTicks();
     try 
     {
-        p -= Vector2i(1, 2);
+        p -= Vector2f(1, 2);
 
         if (!mDragActive) 
         {
@@ -264,13 +263,13 @@ bool Screen::mouseButtonCallbackEvent(int button, int action, int modifiers) {
             }
         }
 
-        if (action == SDL_MOUSEBUTTONDOWN)
+        if (action == SDL_EVENT_MOUSE_BUTTON_DOWN)
             mMouseState |= 1 << button;
         else
             mMouseState &= ~(1 << button);
 
         auto dropWidget = findWidget(mMousePos);
-        if (mDragActive && action == SDL_MOUSEBUTTONUP &&
+        if (mDragActive && action == SDL_EVENT_MOUSE_BUTTON_UP &&
             dropWidget != mDragWidget)
             mDragWidget->mouseButtonEvent(
                 mMousePos - mDragWidget->parent()->absolutePosition(), button,
@@ -281,7 +280,7 @@ bool Screen::mouseButtonCallbackEvent(int button, int action, int modifiers) {
             glfwSetCursor(mGLFWWindow, mCursors[(int) mCursor]);
         }*/
 
-        if (action == SDL_MOUSEBUTTONDOWN && button == SDL_BUTTON_LEFT) {
+        if (action == SDL_EVENT_MOUSE_BUTTON_DOWN && button == SDL_BUTTON_LEFT) {
             mDragWidget = findWidget(mMousePos);
             if (mDragWidget == this)
                 mDragWidget = nullptr;
@@ -293,7 +292,7 @@ bool Screen::mouseButtonCallbackEvent(int button, int action, int modifiers) {
             mDragWidget = nullptr;
         }
 
-        return mouseButtonEvent(mMousePos, button, action == SDL_MOUSEBUTTONDOWN,
+        return mouseButtonEvent(mMousePos, button, action == SDL_EVENT_MOUSE_BUTTON_DOWN,
                                 mModifiers);
     } catch (const std::exception &e) {
         std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
@@ -303,7 +302,7 @@ bool Screen::mouseButtonCallbackEvent(int button, int action, int modifiers) {
     return false;
 }
 
-bool Screen::keyCallbackEvent(int key, int scancode, int action, int mods)
+bool Screen::keyCallbackEvent(int key, int scancode, bool action, int mods)
 {
     mLastInteraction = SDL_GetTicks();
     try {
@@ -357,11 +356,14 @@ bool Screen::scrollCallbackEvent(double x, double y)
 
 bool Screen::resizeCallbackEvent(int, int)
 {
-  Vector2i fbSize, size;
+  Vector2f fbSize, size;
     //glfwGetFramebufferSize(mGLFWWindow, &fbSize[0], &fbSize[1]);
-    SDL_GetWindowSize(_window, &size[0], &size[1]);
+  int w, h;
+  SDL_GetWindowSize(_window, &w, &h);
+  size[0] = w;
+  size[1] = h;
 
-    if (mFBSize == Vector2i(0, 0) || size == Vector2i(0, 0))
+    if (mFBSize == Vector2f(0, 0) || size == Vector2f(0, 0))
         return false;
 
     mFBSize = fbSize;
@@ -411,7 +413,7 @@ void Screen::disposeWindow(Window *window) {
 
 void Screen::centerWindow(Window *window) 
 {
-  if (window->size() == Vector2i{0, 0}) 
+  if (window->size() == Vector2f{0, 0}) 
   {
      window->setSize(window->preferredSize(mSDL_Renderer));
      window->performLayout(mSDL_Renderer);

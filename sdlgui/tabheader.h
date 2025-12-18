@@ -85,18 +85,18 @@ public:
      * Returns a pair of Vectors describing the top left (pair.first) and the
      * bottom right (pair.second) positions of the rectangle containing the visible tab buttons.
      */
-    std::pair<Vector2i, Vector2i> visibleButtonArea() const;
+    std::pair<Vector2f, Vector2f> visibleButtonArea() const;
 
     /**
      * Returns a pair of Vectors describing the top left (pair.first) and the
      * bottom right (pair.second) positions of the rectangle containing the active tab button.
      * Returns two zero vectors if the active button is not visible.
      */
-    std::pair<Vector2i, Vector2i> activeButtonArea() const;
+    std::pair<Vector2f, Vector2f> activeButtonArea() const;
 
     void performLayout(SDL_Renderer* ctx) override;
-    Vector2i preferredSize(SDL_Renderer* ctx) const override;
-    bool mouseButtonEvent(const Vector2i &p, int button, bool down, int modifiers) override;
+    Vector2f preferredSize(SDL_Renderer* ctx) const override;
+    bool mouseButtonEvent(const Vector2f &p, int button, bool down, int modifiers) override;
 
     void draw(SDL_Renderer* renderer) override;
 
@@ -114,19 +114,19 @@ private:
 
         void setLabel(const std::string& label) { mLabel = label; }
         const std::string& label() const { return mLabel; }
-        void setSize(const Vector2i& size) { mSize = size; }
-        const Vector2i& size() const { return mSize; }
+        void setSize(const Vector2f& size) { mSize = size; }
+        const Vector2f& size() const { return mSize; }
 
-        Vector2i preferredSize(SDL_Renderer* ctx) const;
+        Vector2f preferredSize(SDL_Renderer* ctx) const;
         void calculateVisibleString(SDL_Renderer* renderer);
-        void drawAtPosition(SDL_Renderer* renderer, const Vector2i& position, bool active);
-        void drawActiveBorderAt(SDL_Renderer * renderer, const Vector2i& position, float offset, const Color& color);
-        void drawInactiveBorderAt(SDL_Renderer * renderer, const Vector2i& position, float offset, const Color& color);
+        void drawAtPosition(SDL_Renderer* renderer, const Vector2f& position, bool active);
+        void drawActiveBorderAt(SDL_Renderer * renderer, const Vector2f& position, float offset, const Color& color);
+        void drawInactiveBorderAt(SDL_Renderer * renderer, const Vector2f& position, float offset, const Color& color);
 
     private:
         TabHeader* mHeader;
         std::string mLabel;
-        Vector2i mSize;
+        Vector2f mSize;
 
         /**
          * \struct StringView tabheader.h sdl_gui/tabheader.h
@@ -165,7 +165,7 @@ private:
     void calculateVisibleEnd();
 
     void drawControls(SDL_Renderer* renderer);
-    ClickLocation locateClick(const Vector2i& p);
+    ClickLocation locateClick(const Vector2f& p);
     void onArrowLeft();
     void onArrowRight();
 

@@ -26,9 +26,9 @@ BoxLayout::BoxLayout(Orientation orientation, Alignment alignment,
 {
 }
 
-Vector2i BoxLayout::preferredSize(SDL_Renderer *ctx, const Widget *widget) const
+Vector2f BoxLayout::preferredSize(SDL_Renderer *ctx, const Widget *widget) const
 {
-  Vector2i size(2*mMargin, 2*mMargin);
+  Vector2f size(2*mMargin, 2*mMargin);
 
     int yOffset = 0;
     const Window *window = dynamic_cast<const Window *>(widget);
@@ -51,8 +51,8 @@ Vector2i BoxLayout::preferredSize(SDL_Renderer *ctx, const Widget *widget) const
         else
             size[axis1] += mSpacing;
 
-        Vector2i ps = w->preferredSize(ctx), fs = w->fixedSize();
-        Vector2i targetSize(
+        Vector2f ps = w->preferredSize(ctx), fs = w->fixedSize();
+        Vector2f targetSize(
             fs[0] ? fs[0] : ps[0],
             fs[1] ? fs[1] : ps[1]
         );
@@ -61,13 +61,13 @@ Vector2i BoxLayout::preferredSize(SDL_Renderer *ctx, const Widget *widget) const
         size[axis2] = std::max(size[axis2], targetSize[axis2] + 2*mMargin);
         first = false;
     }
-    return size + Vector2i(0, yOffset);
+    return size + Vector2f(0, yOffset);
 }
 
 void BoxLayout::performLayout(SDL_Renderer *ctx, Widget *widget) const 
 {
-  Vector2i fs_w = widget->fixedSize();
-  Vector2i containerSize(
+  Vector2f fs_w = widget->fixedSize();
+  Vector2f containerSize(
         fs_w[0] ? fs_w[0] : widget->width(),
         fs_w[1] ? fs_w[1] : widget->height()
     );
@@ -100,12 +100,12 @@ void BoxLayout::performLayout(SDL_Renderer *ctx, Widget *widget) const
         else
             _position += mSpacing;
 
-        Vector2i ps = w->preferredSize(ctx), fs = w->fixedSize();
-        Vector2i targetSize(
+        Vector2f ps = w->preferredSize(ctx), fs = w->fixedSize();
+        Vector2f targetSize(
             fs.x ? fs.x : ps.x,
             fs.y ? fs.y : ps.y
         );
-        Vector2i pos(0, yOffset);
+        Vector2f pos(0, yOffset);
 
         pos[axis1] = _position;
 
@@ -133,9 +133,9 @@ void BoxLayout::performLayout(SDL_Renderer *ctx, Widget *widget) const
     }
 }
 
-Vector2i GroupLayout::preferredSize(SDL_Renderer *ctx, const Widget *widget) const 
+Vector2f GroupLayout::preferredSize(SDL_Renderer *ctx, const Widget *widget) const 
 {
-    int hh = mMargin, ww = 2*mMargin;
+    auto hh = mMargin, ww = 2*mMargin;
 
     const Window *window = dynamic_cast<const Window *>(widget);
     if (window && !window->title().empty())
@@ -151,8 +151,8 @@ Vector2i GroupLayout::preferredSize(SDL_Renderer *ctx, const Widget *widget) con
             hh += (label == nullptr) ? mSpacing : mGroupSpacing;
         first = false;
 
-        Vector2i ps = c->preferredSize(ctx), fs = c->fixedSize();
-        Vector2i targetSize(
+        Vector2f ps = c->preferredSize(ctx), fs = c->fixedSize();
+        Vector2f targetSize(
             fs.x ? fs.x : ps.x,
             fs.y ? fs.y : ps.y
         );
@@ -165,19 +165,19 @@ Vector2i GroupLayout::preferredSize(SDL_Renderer *ctx, const Widget *widget) con
             indent = !label->caption().empty();
     }
     hh += mMargin;
-    return Vector2i(ww, hh);
+    return Vector2f(ww, hh);
 }
 
 void GroupLayout::performLayout(SDL_Renderer *ctx, Widget *widget) const 
 {
-    int hh = mMargin, availableWidth =
+    auto hh = mMargin, availableWidth =
         (widget->fixedWidth() ? widget->fixedWidth() : widget->width()) - 2*mMargin;
 
-    const Window *window = dynamic_cast<const Window *>(widget);
+    auto window = dynamic_cast<const Window *>(widget);
     if (window && !window->title().empty())
         hh += widget->theme()->mWindowHeaderHeight - mMargin/2;
 
-    bool first = true, indent = false;
+    auto first = true, indent = false;
     for (auto c : widget->children()) 
     {
         if (!c->visible())
@@ -188,16 +188,16 @@ void GroupLayout::performLayout(SDL_Renderer *ctx, Widget *widget) const
         first = false;
 
         bool indentCur = indent && label == nullptr;
-        Vector2i ps = Vector2i{ availableWidth - (indentCur ? mGroupIndent : 0),
+        Vector2f ps = Vector2f{ availableWidth - (indentCur ? mGroupIndent : 0),
                                c->preferredSize(ctx).y };
-        Vector2i fs = c->fixedSize();
+        Vector2f fs = c->fixedSize();
 
-        Vector2i targetSize(
+        Vector2f targetSize(
             fs.x ? fs.x : ps.x,
             fs.y ? fs.y : ps.y
         );
 
-        c->setPosition(Vector2i{ mMargin + (indentCur ? mGroupIndent : 0), hh });
+        c->setPosition(Vector2f{ mMargin + (indentCur ? mGroupIndent : 0), hh });
         c->setSize(targetSize);
         c->performLayout(ctx);
 
@@ -208,14 +208,14 @@ void GroupLayout::performLayout(SDL_Renderer *ctx, Widget *widget) const
     }
 }
 
-Vector2i GridLayout::preferredSize(SDL_Renderer *ctx,
+Vector2f GridLayout::preferredSize(SDL_Renderer *ctx,
                                    const Widget *widget) const 
 {
     /* Compute minimum row / column sizes */
-    std::vector<int> grid[2];
+    std::vector<float> grid[2];
     computeLayout(ctx, widget, grid);
 
-    Vector2i size(
+    Vector2f size(
         2*mMargin + std::accumulate(grid[0].begin(), grid[0].end(), 0)
          + std::max((int) grid[0].size() - 1, 0) * mSpacing[0],
         2*mMargin + std::accumulate(grid[1].begin(), grid[1].end(), 0)
@@ -229,16 +229,17 @@ Vector2i GridLayout::preferredSize(SDL_Renderer *ctx,
     return size;
 }
 
-void GridLayout::computeLayout(SDL_Renderer *ctx, const Widget *widget, std::vector<int> *grid) const 
+void GridLayout::computeLayout(SDL_Renderer *ctx, const Widget *widget, std::vector<float> *grid) const 
 {
-    int axis1 = (int) mOrientation, axis2 = (axis1 + 1) % 2;
+    int axis1 = static_cast<int>(mOrientation);
+    auto axis2 = (axis1 + 1) % 2;
     size_t numChildren = widget->children().size(), visibleChildren = 0;
     for (auto w : widget->children())
         visibleChildren += w->visible() ? 1 : 0;
 
-    Vector2i dim;
+    Vector2f dim;
     dim[axis1] = mResolution;
-    dim[axis2] = (int) ((visibleChildren + mResolution - 1) / mResolution);
+    dim[axis2] =  ((visibleChildren + mResolution - 1) / mResolution);
 
     grid[axis1].clear(); grid[axis1].resize(dim[axis1], 0);
     grid[axis2].clear(); grid[axis2].resize(dim[axis2], 0);
@@ -256,9 +257,9 @@ void GridLayout::computeLayout(SDL_Renderer *ctx, const Widget *widget, std::vec
                 w = widget->children()[child++];
             } while (!w->visible());
 
-            Vector2i ps = w->preferredSize(ctx);
-            Vector2i fs = w->fixedSize();
-            Vector2i targetSize(
+            Vector2f ps = w->preferredSize(ctx);
+            Vector2f fs = w->fixedSize();
+            Vector2f targetSize(
                 fs.x ? fs.x : ps.x,
                 fs.y ? fs.y : ps.y
             );
@@ -271,18 +272,18 @@ void GridLayout::computeLayout(SDL_Renderer *ctx, const Widget *widget, std::vec
 
 void GridLayout::performLayout(SDL_Renderer *ctx, Widget *widget) const 
 {
-  Vector2i fs_w = widget->fixedSize();
-  Vector2i containerSize(
+  Vector2f fs_w = widget->fixedSize();
+  Vector2f containerSize(
         fs_w[0] ? fs_w[0] : widget->width(),
         fs_w[1] ? fs_w[1] : widget->height()
     );
 
     /* Compute minimum row / column sizes */
-    std::vector<int> grid[2];
+    std::vector<float> grid[2];
     computeLayout(ctx, widget, grid);
-    int dim[2] = { (int) grid[0].size(), (int) grid[1].size() };
+    size_t dim[2] = {  grid[0].size(),  grid[1].size() };
 
-    Vector2i extra = Vector2i::Zero();
+    Vector2f extra = Vector2f::Zero();
     const Window *window = dynamic_cast<const Window *>(widget);
     if (window && !window->title().empty())
         extra[1] += widget->theme()->mWindowHeaderHeight - mMargin / 2;
@@ -290,8 +291,8 @@ void GridLayout::performLayout(SDL_Renderer *ctx, Widget *widget) const
     /* Strech to size provided by \c widget */
     for (int i = 0; i < 2; i++) 
     {
-        int gridSize = 2 * mMargin + extra[i];
-        for (int s : grid[i]) 
+        auto gridSize = 2 * mMargin + extra[i];
+        for (auto s : grid[i]) 
         {
             gridSize += s;
             if (i+1 < dim[i])
@@ -301,23 +302,24 @@ void GridLayout::performLayout(SDL_Renderer *ctx, Widget *widget) const
         if (gridSize < containerSize[i]) 
         {
             /* Re-distribute remaining space evenly */
-            int gap = containerSize[i] - gridSize;
-            int g = gap / dim[i];
-            int rest = gap - g * dim[i];
-            for (int j = 0; j < dim[i]; ++j)
+            auto gap = containerSize[i] - gridSize;
+            auto g = gap / dim[i];
+            auto rest = gap - g * dim[i];
+            for (size_t j = 0; j < dim[i]; ++j)
                 grid[i][j] += g;
-            for (int j = 0; rest > 0 && j < dim[i]; --rest, ++j)
+            for (size_t j = 0; rest > 0 && j < dim[i]; --rest, ++j)
                 grid[i][j] += 1;
         }
     }
-
-    int axis1 = (int) mOrientation, axis2 = (axis1 + 1) % 2;
-    Vector2i start = Vector2i::Constant(mMargin) + extra;
+    
+    auto axis1 = static_cast<int>(mOrientation);
+    auto axis2 = (axis1 + 1) % 2;
+    Vector2f start = Vector2f::Constant(mMargin) + extra;
 
     size_t numChildren = widget->children().size();
     size_t child = 0;
 
-    Vector2i pos = start;
+    Vector2f pos = start;
     for (int i2 = 0; i2 < dim[axis2]; i2++) 
     {
         pos[axis1] = start[axis1];
@@ -331,14 +333,14 @@ void GridLayout::performLayout(SDL_Renderer *ctx, Widget *widget) const
                 w = widget->children()[child++];
             } while (!w->visible());
 
-            Vector2i ps = w->preferredSize(ctx);
-            Vector2i fs = w->fixedSize();
-            Vector2i targetSize(
+            Vector2f ps = w->preferredSize(ctx);
+            Vector2f fs = w->fixedSize();
+            Vector2f targetSize(
                 fs[0] ? fs[0] : ps[0],
                 fs[1] ? fs[1] : ps[1]
             );
 
-            Vector2i itemPos(pos);
+            Vector2f itemPos(pos);
             for (int j = 0; j < 2; j++) 
             {
                 int axis = (axis1 + j) % 2;
@@ -376,17 +378,17 @@ AdvancedGridLayout::AdvancedGridLayout(const std::vector<int> &cols, const std::
     mRowStretch.resize(mRows.size(), 0);
 }
 
-Vector2i AdvancedGridLayout::preferredSize(SDL_Renderer *ctx, const Widget *widget) const
+Vector2f AdvancedGridLayout::preferredSize(SDL_Renderer *ctx, const Widget *widget) const
 {
     /* Compute minimum row / column sizes */
     std::vector<int> grid[2];
     computeLayout(ctx, widget, grid);
 
-    Vector2i size(
+    Vector2f size(
         std::accumulate(grid[0].begin(), grid[0].end(), 0),
         std::accumulate(grid[1].begin(), grid[1].end(), 0));
 
-    Vector2i extra = Vector2i::Constant(2 * mMargin);
+    Vector2f extra = Vector2f::Constant(2 * mMargin);
     const Window *window = dynamic_cast<const Window *>(widget);
     if (window && !window->title().empty())
         extra[1] += widget->theme()->mWindowHeaderHeight - mMargin/2;
@@ -437,7 +439,7 @@ void AdvancedGridLayout::performLayout(SDL_Renderer *ctx, Widget *widget) const
                     break;
             }
 
-            Vector2i pos = w->position(), size = w->size();
+            Vector2f pos = w->position(), size = w->size();
             pos[axis] = itemPos;
             size[axis] = targetSize;
             w->setPosition(pos);
@@ -450,13 +452,13 @@ void AdvancedGridLayout::performLayout(SDL_Renderer *ctx, Widget *widget) const
 void AdvancedGridLayout::computeLayout(SDL_Renderer *ctx, const Widget *widget,
                                        std::vector<int> *_grid) const 
 {
-  Vector2i fs_w = widget->fixedSize();
-  Vector2i containerSize(
+  Vector2f fs_w = widget->fixedSize();
+  Vector2f containerSize(
         fs_w[0] ? fs_w[0] : widget->width(),
         fs_w[1] ? fs_w[1] : widget->height()
     );
 
-    Vector2i extra(2 * mMargin, 2 * mMargin);
+    Vector2f extra(2 * mMargin, 2 * mMargin);
     const Window *window = dynamic_cast<const Window *>(widget);
     if (window && !window->title().empty())
         extra[1] += widget->theme()->mWindowHeaderHeight - mMargin/2;

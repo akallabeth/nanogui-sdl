@@ -69,13 +69,13 @@ public:
     virtual void setTheme(Theme *theme);
 
     /// Return the position relative to the parent widget
-    const Vector2i &position() const { return _pos; }
+    const Vector2f &position() const { return _pos; }
     /// Set the position relative to the parent widget
-    void setPosition(const Vector2i &pos) { _pos = pos; }
-    void setPosition(int x, int y) { _pos = { x, y }; }
+    void setPosition(const Vector2f &pos) { _pos = pos; }
+    void setPosition(float x, float y) { _pos = { x, y }; }
 
     /// Return the absolute position on screen
-    Vector2i absolutePosition() const
+    Vector2f absolutePosition() const
     {
         return mParent 
                   ? (mParent->absolutePosition() + _pos) 
@@ -83,19 +83,19 @@ public:
     }
 
     /// Return the size of the widget
-    const Vector2i &size() const { return mSize; }
+    const Vector2f &size() const { return mSize; }
     /// set the size of the widget
-    void setSize(const Vector2i &size) { mSize = size; }
+    void setSize(const Vector2f &size) { mSize = size; }
 
     /// Return the width of the widget
-    int width() const { return mSize.x; }
+    float width() const { return mSize.x; }
     /// Set the width of the widget
-    void setWidth(int width) { mSize.x = width; }
+    void setWidth(float width) { mSize.x = width; }
 
     /// Return the height of the widget
-    int height() const { return mSize.y; }
+    float height() const { return mSize.y; }
     /// Set the height of the widget
-    void setHeight(int height) { mSize.y = height; }
+    void setHeight(float height) { mSize.y = height; }
 
     /**
      * \brief Set the fixed size of this widget
@@ -106,10 +106,10 @@ public:
      * size; this is done with a call to \ref setSize or a call to \ref performLayout()
      * in the parent widget.
      */
-    void setFixedSize(const Vector2i &fixedSize) { mFixedSize = fixedSize; }
+    void setFixedSize(const Vector2f &fixedSize) { mFixedSize = fixedSize; }
 
     /// Return the fixed size (see \ref setFixedSize())
-    const Vector2i &fixedSize() const { return mFixedSize; }
+    const Vector2f &fixedSize() const { return mFixedSize; }
 
     // Return the fixed width (see \ref setFixedSize())
     int fixedWidth() const { return mFixedSize.x; }
@@ -221,14 +221,14 @@ public:
     void setCursor(Cursor cursor) { mCursor = cursor; }
 
     /// Check if the widget contains a certain position
-    bool contains(const Vector2i &p) const
+    bool contains(const Vector2f &p) const
     {
-      Vector2i d = p - _pos;
+      Vector2f d = p - _pos;
       return d.positive() && d.lessOrEq({ mSize.x, mSize.y });
     }
 
     /// Determine the widget located at the given position value (recursive)
-    Widget *findWidget(const Vector2i &p);
+    Widget *findWidget(const Vector2f &p);
     Widget *find(const std::string& id, bool inchildren=true);
 
 
@@ -248,31 +248,31 @@ public:
     }
 
     /// Handle a mouse button event (default implementation: propagate to children)
-    virtual bool mouseButtonEvent(const Vector2i &p, int button, bool down, int modifiers);
+    virtual bool mouseButtonEvent(const Vector2f &p, int button, bool down, int modifiers);
 
     /// Handle a mouse motion event (default implementation: propagate to children)
-    virtual bool mouseMotionEvent(const Vector2i &p, const Vector2i &rel, int button, int modifiers);
+    virtual bool mouseMotionEvent(const Vector2f &p, const Vector2f &rel, int button, int modifiers);
 
     /// Handle a mouse drag event (default implementation: do nothing)
-    virtual bool mouseDragEvent(const Vector2i &p, const Vector2i &rel, int button, int modifiers);
+    virtual bool mouseDragEvent(const Vector2f &p, const Vector2f &rel, int button, int modifiers);
 
     /// Handle a mouse enter/leave event (default implementation: record this fact, but do nothing)
-    virtual bool mouseEnterEvent(const Vector2i &p, bool enter);
+    virtual bool mouseEnterEvent(const Vector2f &p, bool enter);
 
     /// Handle a mouse scroll event (default implementation: propagate to children)
-    virtual bool scrollEvent(const Vector2i &p, const Vector2f &rel);
+    virtual bool scrollEvent(const Vector2f &p, const Vector2f &rel);
 
     /// Handle a focus change event (default implementation: record the focus status, but do nothing)
     virtual bool focusEvent(bool focused);
 
     /// Handle a keyboard event (default implementation: do nothing)
-    virtual bool keyboardEvent(int key, int scancode, int action, int modifiers);
+    virtual bool keyboardEvent(int key, int scancode, bool action, uint16_t modifiers);
 
     /// Handle text input (UTF-32 format) (default implementation: do nothing)
     virtual bool keyboardCharacterEvent(unsigned int codepoint);
 
     /// Compute the preferred size of the widget
-    virtual Vector2i preferredSize(SDL_Renderer *ctx) const;
+    virtual Vector2f preferredSize(SDL_Renderer *ctx) const;
 
     /// Invoke the associated layout generator to properly place child widgets, if any
     virtual void performLayout(SDL_Renderer *ctx);
@@ -280,17 +280,17 @@ public:
     /// Draw the widget (and all child widgets)
     virtual void draw(SDL_Renderer* renderer);
 
-    virtual int getAbsoluteLeft() const;
-    virtual SDL_Point getAbsolutePos() const;
-    virtual PntRect getAbsoluteCliprect() const;
-    virtual int getAbsoluteTop() const;
+    virtual float getAbsoluteLeft() const;
+    virtual SDL_FPoint getAbsolutePos() const;
+    virtual PntFRect getAbsoluteCliprect() const;
+    virtual float getAbsoluteTop() const;
 
     Widget& _and() { return *parent(); }
     Widget& withId(const std::string& id) { setId(id); return *this; }
     
-    Widget& withPosition( const Vector2i& pos ) { setPosition( pos); return *this; }
+    Widget& withPosition( const Vector2f& pos ) { setPosition( pos); return *this; }
     Widget& withFontSize(int size) { setFontSize(size); return *this; }
-    Widget& withFixedSize(const Vector2i& size) { setFixedSize(size); return *this; }
+    Widget& withFixedSize(const Vector2f& size) { setFixedSize(size); return *this; }
     Widget& withTooltip(const std::string& text) { setTooltip(text); return *this; }
 
     template<typename LayoutClass,typename... Args>
@@ -324,8 +324,8 @@ protected:
     ref<Theme> mTheme;
     ref<Layout> mLayout;
     std::string mId;
-    Vector2i _pos;
-    Vector2i mSize, mFixedSize;
+    Vector2f _pos;
+    Vector2f mSize, mFixedSize;
     std::vector<Widget *> mChildren;
     bool mVisible, mEnabled;
     bool mFocused, mMouseFocus;

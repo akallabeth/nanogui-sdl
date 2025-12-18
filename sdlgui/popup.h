@@ -33,9 +33,9 @@ public:
     Popup(Widget *parent, Window *parentWindow);
 
     /// Return the anchor position in the parent window; the placement of the popup is relative to it
-    void setAnchorPos(const Vector2i &anchorPos) { mAnchorPos = anchorPos; }
+    void setAnchorPos(const Vector2f &anchorPos) { mAnchorPos = anchorPos; }
     /// Set the anchor position in the parent window; the placement of the popup is relative to it
-    const Vector2i &anchorPos() const { return mAnchorPos; }
+    const Vector2f &anchorPos() const { return mAnchorPos; }
 
     /// Set the anchor height; this determines the vertical shift relative to the anchor position
     void setAnchorHeight(int anchorHeight) { mAnchorHeight = anchorHeight; }
@@ -58,11 +58,11 @@ public:
 protected:
     /// Internal helper function to maintain nested window position values
     virtual void refreshRelativePlacement();
-    virtual void rendereBodyTexture(NVGcontext* &ctx, int& ctxw, int& ctxh, int dx);
-    virtual Vector2i getOverrideBodyPos();
+    virtual void rendereBodyTexture(NVGcontext* &ctx, float& ctxw, float& ctxh, int dx);
+    virtual Vector2f getOverrideBodyPos();
 
     Window *mParentWindow;
-    Vector2i mAnchorPos;
+    Vector2f mAnchorPos;
     int mAnchorHeight;
     int _anchorDx = 15;
 

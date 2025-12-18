@@ -29,10 +29,10 @@ public:
   DropdownListItem(Widget* parent, const std::string& str, bool inlist=true)
     : Button(parent, str), mInlist(inlist) {}
 
-  void renderBodyTexture(NVGcontext* &ctx, int &realw, int &realh) override
+  void renderBodyTexture(NVGcontext* &ctx, float &realw, float &realh) override
   {
-    int ww = width();
-    int hh = height();
+    auto ww = width();
+    auto hh = height();
     ctx = nvgCreateRT(NVG_DEBUG, ww + 2, hh + 2, 0);
 
     float pxRatio = 1.0f;
@@ -121,7 +121,7 @@ public:
     nvgEndFrame(ctx);
   }
 
-  Vector2i getTextOffset() const override { return Vector2i(0, 0); }
+  Vector2f getTextOffset() const override { return Vector2f(0, 0); }
 };
 
 class DropdownPopup : public Popup
@@ -138,9 +138,9 @@ public:
   float targetPath = 0;
   void hide() { targetPath = 0; }
 
-  Vector2i preferredSize(SDL_Renderer *ctx) const override
+  Vector2f preferredSize(SDL_Renderer *ctx) const override
   {
-    Vector2i result = Popup::preferredSize(ctx);
+    Vector2f result = Popup::preferredSize(ctx);
     result.x = preferredWidth;
     return result;
   }
@@ -154,10 +154,10 @@ public:
     while (widget->parent() != nullptr)
       widget = widget->parent();
     Screen *screen = (Screen *)widget;
-    Vector2i screenSize = screen->size();
+    Vector2f screenSize = screen->size();
 
     _pos = mParentWindow->position() + mAnchorPos;
-    _pos = Vector2i(_pos.x, std::min(_pos.y, screen->size().y - mSize.y));
+    _pos = Vector2f(_pos.x, std::min(_pos.y, screen->size().y - mSize.y));
   }
 
   void updateCaption(const std::string& caption)
@@ -188,29 +188,30 @@ public:
   float path = 0.f;
   int clamp(int val, int min, int max) { return val < min ? min : (val > max ? max : val); }
 
-  void rendereBodyTexture(NVGcontext* &ctx, int& realw, int& realh, int dx) override
+  void rendereBodyTexture(NVGcontext* &ctx, float& realw, float& realh, int dx) override
   {
-    int ds = 1, cr = mTheme->mWindowCornerRadius;
-    int ww = mFixedSize.x > 0 ? mFixedSize.x : mSize.x;
-    int hh = height();
-    int dy = 0;
-    int xadd = 1;
+      auto ds = 1;
+      auto cr = mTheme->mWindowCornerRadius;
+    auto ww = mFixedSize.x > 0 ? mFixedSize.x : mSize.x;
+    auto hh = height();
+    auto dy = 0;
+    auto xadd = 1;
 
-    int headerH = mChildren[0]->height();
-    int realH = clamp(mSize.y * path, headerH, mSize.y);
+    auto headerH = mChildren[0]->height();
+    auto realH = clamp(mSize.y * path, headerH, mSize.y);
 
-    Vector2i offset(dx + ds, dy + ds);
+    Vector2f offset(dx + ds, dy + ds);
 
     realw = ww + 2 * ds + dx + xadd; //with + 2*shadow + 2*boder + offset
     realh = hh + 2 * ds + dy + xadd;
 
     ctx = nvgCreateRT(NVG_DEBUG, realw, realh, 0);
 
-    float pxRatio = 1.0f;
+    auto pxRatio = 1.0f;
     nvgBeginFrame(ctx, realw, realh, pxRatio);
 
     // Draw a drop shadow 
-    NVGpaint shadowPaint = nvgBoxGradient(ctx, 0, 0, realw, realh, cr * 2, ds * 2,
+    auto shadowPaint = nvgBoxGradient(ctx, 0, 0, realw, realh, cr * 2, ds * 2,
                                           mTheme->mDropShadow.toNvgColor(), mTheme->mTransparent.toNvgColor());
 
     nvgBeginPath(ctx);
@@ -230,11 +231,11 @@ public:
     nvgEndFrame(ctx);
   }
 
-  Vector2i getOverrideBodyPos() override
+  Vector2f getOverrideBodyPos() override
   {
-    Vector2i ap = absolutePosition();
+    Vector2f ap = absolutePosition();
     int ds = 2;// mTheme->mWindowDropShadowSize;
-    return ap - Vector2i(ds, ds);
+    return ap - Vector2f(ds, ds);
   }
 
   void draw(SDL_Renderer* renderer) override
@@ -256,7 +257,7 @@ public:
     {
       nvgBeginPath(ctx);
 
-      Vector2i fp = mPos + mChildren[1]->position();
+      Vector2f fp = mPos + mChildren[1]->position();
       NVGpaint bg = nvgLinearGradient(ctx, fp.x(), fp.y(), fp.x(), fp.y() + 12 ,
                                       mTheme->mBorderMedium, mTheme->mTransparent);
       nvgRect(ctx, fp.x(), fp.y(), ww, 12);
@@ -276,9 +277,9 @@ DropdownBox::DropdownBox(Widget *parent)
   parentWindow->parent()->removeChild(mPopup);
 
   mPopup = new DropdownPopup(parentWindow->parent(), window());
-  mPopup->setSize(Vector2i(320, 250));
+  mPopup->setSize(Vector2f(320, 250));
   mPopup->setVisible(false);
-  mPopup->setAnchorPos(Vector2i(0, 0));
+  mPopup->setAnchorPos(Vector2f(0, 0));
 }
 
 DropdownBox::DropdownBox(Widget *parent, const std::vector<std::string> &items)
@@ -351,7 +352,7 @@ void DropdownBox::setItems(const std::vector<std::string> &items, const std::vec
     setSelectedIndex(mSelectedIndex);
 }
 
-bool DropdownBox::mouseButtonEvent(const Vector2i &p, int button, bool down, int modifiers) 
+bool DropdownBox::mouseButtonEvent(const Vector2f &p, int button, bool down, int modifiers) 
 {
   if (button == SDL_BUTTON_LEFT && mEnabled) {
     if (!mItems.empty())
@@ -365,7 +366,7 @@ bool DropdownBox::mouseButtonEvent(const Vector2i &p, int button, bool down, int
   return PopupButton::mouseButtonEvent(p, button, down, modifiers);
 }
 
-bool DropdownBox::scrollEvent(const Vector2i &p, const Vector2f &rel) 
+bool DropdownBox::scrollEvent(const Vector2f &p, const Vector2f &rel) 
 {
     if (rel.y < 0) 
     {

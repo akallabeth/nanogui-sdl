@@ -32,12 +32,12 @@ public:
     void setChevronIcon(int icon) { mChevronIcon = icon; }
     int chevronIcon() const { return mChevronIcon; }
 
-    Popup& popup(const Vector2i& size) { mPopup->setFixedSize(size); return *mPopup; }
+    Popup& popup(const Vector2f& size) { mPopup->setFixedSize(size); return *mPopup; }
     Popup& popup() { return *mPopup; }
     Popup* popupptr() { return mPopup; }
 
     void draw(SDL_Renderer* renderer) override;
-    Vector2i preferredSize(SDL_Renderer *ctx) const override;
+    Vector2f preferredSize(SDL_Renderer *ctx) const override;
     void performLayout(SDL_Renderer *ctx) override;
 
     PopupButton& withChevron(int icon) { setChevronIcon(icon); return *this; }

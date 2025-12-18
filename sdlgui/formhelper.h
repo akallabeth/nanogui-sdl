@@ -125,7 +125,7 @@ public:
     FormHelper(Screen *screen) : mScreen(screen) { }
 
     /// Add a new top-level window
-    Window *addWindow(const Vector2i &pos,
+    Window *addWindow(const Vector2f &pos,
                          const std::string &title = "Untitled") {
         assert(mScreen);
         mWindow = new Window(mScreen, title);
@@ -164,8 +164,8 @@ public:
         widget->setCallback(setter);
         widget->setEditable(editable);
         widget->setFontSize(mWidgetFontSize);
-        Vector2i fs = widget->fixedSize();
-        widget->setFixedSize(Vector2i(fs.x != 0 ? fs.x : mFixedSize.x,
+        auto fs = widget->fixedSize();
+        widget->setFixedSize(Vector2f(fs.x != 0 ? fs.x : mFixedSize.x,
                                       fs.y != 0 ? fs.y : mFixedSize.y));
         mRefreshCallbacks.push_back(refresh);
         if (mLayout->rowCount() > 0)
@@ -227,8 +227,8 @@ public:
     }
 
     /// Specify a fixed size for newly added widgets
-    void setFixedSize(const Vector2i &fw) { mFixedSize = fw; }
-    Vector2i fixedSize() { return mFixedSize; }
+    void setFixedSize(const Vector2f &fw) { mFixedSize = fw; }
+    Vector2f fixedSize() const { return mFixedSize; }
 
     /* Set the font size / name of labels, group headers, and data widgets */
     const std::string &groupFontName() const { return mGroupFontName; }
@@ -249,7 +249,7 @@ protected:
     std::vector<std::function<void()>> mRefreshCallbacks;
     std::string mGroupFontName = "sans-bold";
     std::string mLabelFontName = "sans";
-    Vector2i mFixedSize = Vector2i(0, 20);
+    Vector2f mFixedSize = Vector2f(0, 20);
     int mGroupFontSize = 20;
     int mLabelFontSize = 16;
     int mWidgetFontSize = 16;

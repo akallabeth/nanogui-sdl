@@ -33,7 +33,7 @@ public:
     int selectedIndex() const;
 
     void performLayout(SDL_Renderer* ctx) override;
-    Vector2i preferredSize(SDL_Renderer* ctx) const override;
+    Vector2f preferredSize(SDL_Renderer* ctx) const override;
     void addChild(int index, Widget* widget) override;
 
 private:

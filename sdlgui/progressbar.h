@@ -29,7 +29,7 @@ public:
     float value() const { return mValue; }
     void setValue(float value);
 
-    Vector2i preferredSize(SDL_Renderer* ctx) const override;
+    Vector2f preferredSize(SDL_Renderer* ctx) const override;
     void draw(SDL_Renderer* renderer) override;
     void drawBody(SDL_Renderer* renderer);
     void drawBar(SDL_Renderer* renderer);

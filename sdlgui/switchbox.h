@@ -55,7 +55,7 @@ public:
              const std::function<void(bool)> &callback = std::function<void(bool)>());
 
     /// The preferred size of this SwitchBox.
-    virtual Vector2i preferredSize(SDL_Renderer *renderer) const override;
+    virtual Vector2f preferredSize(SDL_Renderer *renderer) const override;
 
     /// Draws this SwitchBox.
     virtual void draw(SDL_Renderer *renderer) override;

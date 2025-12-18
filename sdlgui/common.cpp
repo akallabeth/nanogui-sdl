@@ -13,16 +13,8 @@
 #include <windows.h>
 #endif
 
-#if defined(_WIN32)
-#include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
-#if defined(_WIN32)
-#include <SDL_image.h>
-#else
-#include <SDL2/SDL_image.h>
-#endif
+#include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
 #include "nanovg.h"
 
 #include <map>
@@ -46,20 +38,20 @@ NVGcolor Color::toNvgColor() const {
 
 extern std::map<SDL_Window *, Screen *> __sdlgui_screens;
 
-PntRect srect2pntrect(const SDL_Rect& srect)
+PntFRect srect2PntFRect(const SDL_FRect& srect)
 {
   return{ srect.x, srect.y, srect.x + srect.w, srect.y + srect.h };
 }
 
-SDL_Rect pntrect2srect(const PntRect& frect)
+SDL_FRect PntFRect2srect(const PntFRect& frect)
 {
   return{ frect.x1, frect.y1, frect.x2 - frect.x1, frect.y2 - frect.y1 };
 }
 
-SDL_Rect clip_rects(SDL_Rect af, const SDL_Rect& bf)
+SDL_FRect clip_rects(SDL_FRect af, const SDL_FRect& bf)
 {
-  PntRect a{ af.x, af.y, af.x + af.w, af.y + af.h };
-  PntRect b{ bf.x, bf.y, bf.x + bf.w, bf.y + bf.h };
+  PntFRect a{ af.x, af.y, af.x + af.w, af.y + af.h };
+  PntFRect b{ bf.x, bf.y, bf.x + bf.w, bf.y + bf.h };
   if (a.x1 < b.x1)
     a.x1 = b.x1;
   if (a.y1 < b.y1)
@@ -72,7 +64,7 @@ SDL_Rect clip_rects(SDL_Rect af, const SDL_Rect& bf)
   return { a.x1, a.y1, a.x2 - a.x1, a.y2 - a.y1 };
 }
 
-PntRect clip_rects(PntRect a, const PntRect& b)
+PntFRect clip_rects(PntFRect a, const PntFRect& b)
 {
   if (a.x1 < b.x1)
     a.x1 = b.x1;

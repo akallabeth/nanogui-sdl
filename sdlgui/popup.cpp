@@ -36,7 +36,7 @@ struct Popup::AsyncTexture
       std::lock_guard<std::mutex> guard(pp->theme()->loadMutex);
 
       NVGcontext *ctx = nullptr;
-      int realw, realh;
+      float realw, realh;
       pp->rendereBodyTexture(ctx, realw, realh, dx);
       self->tex.rrect = { 0, 0, realw, realh };
       self->ctx = ctx;
@@ -69,18 +69,18 @@ struct Popup::AsyncTexture
 
 Popup::Popup(Widget *parent, Window *parentWindow)
     : Window(parent, ""), mParentWindow(parentWindow),
-      mAnchorPos(Vector2i::Zero()), mAnchorHeight(30)
+      mAnchorPos(Vector2f::Zero()), mAnchorHeight(30)
 {
 }
 
-void Popup::rendereBodyTexture(NVGcontext*& ctx, int& realw, int& realh, int dx)
+void Popup::rendereBodyTexture(NVGcontext*& ctx, float& realw, float& realh, int dx)
 {
-  int ww = width();
-  int hh = height();
-  int ds = mTheme->mWindowDropShadowSize;
-  int dy = 0;
+  auto ww = width();
+  auto hh = height();
+  auto ds = mTheme->mWindowDropShadowSize;
+  auto dy = 0.0f;
 
-  Vector2i offset(dx + ds, dy + ds);
+  Vector2f offset(dx + ds, dy + ds);
 
   realw = ww + 2 * ds + dx; //with + 2*shadow + offset
   realh = hh + 2 * ds + dy;
@@ -108,7 +108,7 @@ void Popup::rendereBodyTexture(NVGcontext*& ctx, int& realw, int& realh, int dx)
   nvgBeginPath(ctx);
   nvgRoundedRect(ctx, offset.x, offset.y, ww, hh, cr);
 
-  Vector2i base = Vector2i(offset.x + 0, offset.y + anchorHeight());
+  Vector2f base = Vector2f(offset.x + 0, offset.y + anchorHeight());
   int sign = -1;
 
   nvgMoveTo(ctx, base.x + 15 * sign, base.y);
@@ -128,7 +128,7 @@ void Popup::performLayout(SDL_Renderer *ctx)
     } 
     else 
     {
-        mChildren[0]->setPosition(Vector2i::Zero());
+        mChildren[0]->setPosition(Vector2f::Zero());
         mChildren[0]->setSize(mSize);
         mChildren[0]->performLayout(ctx);
     }
@@ -143,10 +143,10 @@ void Popup::refreshRelativePlacement()
     while (widget->parent() != nullptr)
         widget = widget->parent();
     Screen *screen = (Screen *)widget;
-    Vector2i screenSize = screen->size();
+    Vector2f screenSize = screen->size();
 
-    _pos = mParentWindow->position() + mAnchorPos - Vector2i(0, mAnchorHeight);
-    _pos = Vector2i(_pos.x, std::min(_pos.y, screen->size().y - mSize.y));
+    _pos = mParentWindow->position() + mAnchorPos - Vector2f(0, mAnchorHeight);
+    _pos = Vector2f(_pos.x, std::min(_pos.y, screen->size().y - mSize.y));
 }
 
 void Popup::drawBodyTemp(SDL_Renderer* renderer)
@@ -156,12 +156,12 @@ void Popup::drawBodyTemp(SDL_Renderer* renderer)
 
   /* Draw a drop shadow */
   SDL_Color sh = mTheme->mDropShadow.toSdlColor();
-  SDL_Rect shRect{ _pos.x - ds, _pos.y - ds, mSize.x + 2 * ds, mSize.y + 2 * ds };
+  SDL_FRect shRect{ _pos.x - ds, _pos.y - ds, mSize.x + 2 * ds, mSize.y + 2 * ds };
   SDL_SetRenderDrawColor(renderer, sh.r, sh.g, sh.b, 64);
   SDL_RenderFillRect(renderer, &shRect);
 
   SDL_Color bg = mTheme->mWindowPopup.toSdlColor();
-  SDL_Rect bgRect{ _pos.x, _pos.y, mSize.x, mSize.y };
+  SDL_FRect bgRect{ _pos.x, _pos.y, mSize.x, mSize.y };
 
   SDL_SetRenderDrawColor(renderer, bg.r, bg.g, bg.b, bg.a);
   SDL_RenderFillRect(renderer, &bgRect);
@@ -169,17 +169,17 @@ void Popup::drawBodyTemp(SDL_Renderer* renderer)
   SDL_Color br = mTheme->mBorderDark.toSdlColor();
   SDL_SetRenderDrawColor(renderer, br.r, br.g, br.b, br.a);
 
-  SDL_Rect brr{ _pos.x - 1, _pos.y - 1, width() + 2, height() + 2 };
-  SDL_RenderDrawLine(renderer, brr.x, brr.y, brr.x + brr.w, brr.y);
-  SDL_RenderDrawLine(renderer, brr.x + brr.w, brr.y, brr.x + brr.w, brr.y + brr.h);
-  SDL_RenderDrawLine(renderer, brr.x, brr.y + brr.h, brr.x + brr.w, brr.y + brr.h);
-  SDL_RenderDrawLine(renderer, brr.x, brr.y, brr.x, brr.y + brr.h);
+  SDL_FRect brr{ _pos.x - 1, _pos.y - 1, width() + 2, height() + 2 };
+  SDL_RenderLine(renderer, brr.x, brr.y, brr.x + brr.w, brr.y);
+  SDL_RenderLine(renderer, brr.x + brr.w, brr.y, brr.x + brr.w, brr.y + brr.h);
+  SDL_RenderLine(renderer, brr.x, brr.y + brr.h, brr.x + brr.w, brr.y + brr.h);
+  SDL_RenderLine(renderer, brr.x, brr.y, brr.x, brr.y + brr.h);
 
   // Draw window anchor
   SDL_SetRenderDrawColor(renderer, bg.r, bg.g, bg.b, bg.a);
   for (int i = 0; i < 15; i++)
   {
-    SDL_RenderDrawLine(renderer, _pos.x - 15 + i, _pos.y + mAnchorHeight - i,
+    SDL_RenderLine(renderer, _pos.x - 15 + i, _pos.y + mAnchorHeight - i,
       _pos.x - 15 + i, _pos.y + mAnchorHeight + i);
   }
 }
@@ -195,7 +195,7 @@ void Popup::drawBody(SDL_Renderer* renderer)
     (*atx)->perform(renderer);
     
     if ((*atx)->tex.tex)
-      SDL_RenderCopy(renderer, (*atx)->tex, getOverrideBodyPos());
+      SDL_RenderTexture(renderer, (*atx)->tex, getOverrideBodyPos());
     else
       drawBodyTemp(renderer);
   }
@@ -207,11 +207,11 @@ void Popup::drawBody(SDL_Renderer* renderer)
   }
 }
 
-Vector2i Popup::getOverrideBodyPos()
+Vector2f Popup::getOverrideBodyPos()
 {
-  Vector2i ap = absolutePosition();
+  Vector2f ap = absolutePosition();
   int ds = mTheme->mWindowDropShadowSize;
-  return ap - Vector2i(_anchorDx + ds, ds);
+  return ap - Vector2f(_anchorDx + ds, ds);
 }
 
 void Popup::draw(SDL_Renderer* renderer)
