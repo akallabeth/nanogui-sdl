@@ -19,6 +19,7 @@
 #define NANOVG_RT_IMPLEMENTATION
 #define NANORT_IMPLEMENTATION
 #include "nanovg_rt.h"
+#include "utils.h"
 
 NAMESPACE_BEGIN(sdlgui)
 
@@ -130,15 +131,8 @@ struct Window::AsyncTexture
     const int w = tex.w();
     const int h = tex.w();
     tex.tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING,w, h);
-
-    int pitch;
-    uint8_t *pixels = nullptr;
-    auto ok = SDL_LockTexture(tex.tex, nullptr, (void **)&pixels, &pitch);
-    if (ok) {
-        memcpy(pixels, rgba, sizeof(uint32_t) * w * h);
-        SDL_SetTextureBlendMode(tex.tex, SDL_BLENDMODE_BLEND);
-        SDL_UnlockTexture(tex.tex);
-    }
+    
+    utils::copy_to_texture(tex.tex, w, h, rgba);
 
     nvgDeleteRT(ctx);
     ctx = nullptr;

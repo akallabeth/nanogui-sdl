@@ -16,6 +16,7 @@
 #define NANOVG_RT_IMPLEMENTATION
 #define NANORT_IMPLEMENTATION
 #include "nanovg_rt.h"
+#include "utils.h"
 
 NAMESPACE_BEGIN(sdlgui)
 
@@ -102,7 +103,7 @@ struct ProgressBar::AsyncTexture
     if (!ctx)
       return;
 
-    unsigned char *rgba = nvgReadPixelsRT(ctx);
+    auto rgba = nvgReadPixelsRT(ctx);
 
     if (tex.tex)
     {
@@ -114,13 +115,8 @@ struct ProgressBar::AsyncTexture
 
     if (!tex.tex)
       tex.tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, tex.w(), tex.h());
-
-    int pitch;
-    uint8_t *pixels;
-    int ok = SDL_LockTexture(tex.tex, nullptr, (void **)&pixels, &pitch);
-    memcpy(pixels, rgba, sizeof(uint32_t) * tex.w() * tex.h());
-    SDL_SetTextureBlendMode(tex.tex, SDL_BLENDMODE_BLEND);
-    SDL_UnlockTexture(tex.tex);
+    
+    utils::copy_to_texture(tex.tex, tex.w(), tex.h(), rgba);
 
     nvgDeleteRT(ctx);
     ctx = nullptr;

@@ -33,22 +33,22 @@ bool Screen::onEvent(SDL_Event& event)
 {
     switch( event.type )
     {
+    case SDL_EVENT_WINDOW_FOCUS_GAINED:
+        SDL_StartTextInput(_window);
+        break;
+    case SDL_EVENT_WINDOW_FOCUS_LOST:
+        SDL_StopTextInput(_window);
+        break;
     case SDL_EVENT_MOUSE_WHEEL:
-    {
         if (!mProcessEvents)
             return false;
         return scrollCallbackEvent(event.wheel.x, event.wheel.y);
-    }
-    break;
 
     case SDL_EVENT_MOUSE_MOTION:
-    {
       if (!mProcessEvents)
          return false;
       return cursorPosCallbackEvent(event.motion.x, event.motion.y);
-    }
-    break;
-
+    
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
     case SDL_EVENT_MOUSE_BUTTON_UP:
     {

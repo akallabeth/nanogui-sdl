@@ -53,10 +53,11 @@ struct Button::AsyncTexture
     if (!ctx)
       return;
 
-    unsigned char *rgba = nvgReadPixelsRT(ctx);
+    auto rgba = nvgReadPixelsRT(ctx);
 
     tex.tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, tex.w(), tex.h());
-
+    
+    
     int pitch;
     uint8_t *pixels;
     int ok = SDL_LockTexture(tex.tex, nullptr, (void **)&pixels, &pitch);
